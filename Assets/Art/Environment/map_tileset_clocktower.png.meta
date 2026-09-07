@@ -1,0 +1,403 @@
+fileFormatVersion: 2
+guid: 562e833433278cf42b0334511f847319
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3331151272818471703
+    second: map_tileset_clocktower_0
+  - first:
+      213: 4837246227942181707
+    second: map_tileset_clocktower_1
+  - first:
+      213: 5738253822309879458
+    second: map_tileset_clocktower_2
+  - first:
+      213: 5778406001272565649
+    second: map_tileset_clocktower_3
+  - first:
+      213: -7071884997599181048
+    second: map_tileset_clocktower_4
+  - first:
+      213: 5016031834213899225
+    second: map_tileset_clocktower_5
+  - first:
+      213: 1506685570746832416
+    second: map_tileset_clocktower_6
+  - first:
+      213: 6060476900384936666
+    second: map_tileset_clocktower_7
+  - first:
+      213: 6796774707182785705
+    second: map_tileset_clocktower_8
+  - first:
+      213: 6266303308988851088
+    second: map_tileset_clocktower_9
+  - first:
+      213: -8465780882136903397
+    second: map_tileset_clocktower_10
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: map_tileset_clocktower_0
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 715
+        width: 418
+        height: 114
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ec809a019f55c1d0800000000000000
+      internalID: -3331151272818471703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_1
+      rect:
+        serializedVersion: 2
+        x: 478
+        y: 698
+        width: 277
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4b8793c0d9512340800000000000000
+      internalID: 4837246227942181707
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_2
+      rect:
+        serializedVersion: 2
+        x: 789
+        y: 675
+        width: 187
+        height: 261
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2aecec5e27f52af40800000000000000
+      internalID: 5738253822309879458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_3
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 392
+        width: 89
+        height: 255
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19f26d194a5013050800000000000000
+      internalID: 5778406001272565649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_4
+      rect:
+        serializedVersion: 2
+        x: 246
+        y: 392
+        width: 81
+        height: 255
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 807cfa9201e9bdd90800000000000000
+      internalID: -7071884997599181048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_5
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 392
+        width: 179
+        height: 244
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9dbde5c80668c9540800000000000000
+      internalID: 5016031834213899225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_6
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 410
+        width: 379
+        height: 149
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02652983b82d8e410800000000000000
+      internalID: 1506685570746832416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_7
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 92
+        width: 302
+        height: 179
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad297e091a32b1450800000000000000
+      internalID: 6060476900384936666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_8
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 79
+        width: 147
+        height: 244
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a45df7d59ef25e50800000000000000
+      internalID: 6796774707182785705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_9
+      rect:
+        serializedVersion: 2
+        x: 536
+        y: 163
+        width: 180
+        height: 112
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 093a223c8a166f650800000000000000
+      internalID: 6266303308988851088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: map_tileset_clocktower_10
+      rect:
+        serializedVersion: 2
+        x: 737
+        y: 95
+        width: 263
+        height: 160
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b11dfed2421838a80800000000000000
+      internalID: -8465780882136903397
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      map_tileset_clocktower_0: -3331151272818471703
+      map_tileset_clocktower_1: 4837246227942181707
+      map_tileset_clocktower_10: -8465780882136903397
+      map_tileset_clocktower_2: 5738253822309879458
+      map_tileset_clocktower_3: 5778406001272565649
+      map_tileset_clocktower_4: -7071884997599181048
+      map_tileset_clocktower_5: 5016031834213899225
+      map_tileset_clocktower_6: 1506685570746832416
+      map_tileset_clocktower_7: 6060476900384936666
+      map_tileset_clocktower_8: 6796774707182785705
+      map_tileset_clocktower_9: 6266303308988851088
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
