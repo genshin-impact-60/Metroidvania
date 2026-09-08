@@ -9,6 +9,7 @@ public class StepAPlayground : MonoBehaviour
     const string RunPath = "Assets/Art/Characters/protagonist_cursed_pilgrim_chibi_run.png";
     const string IdleSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_idle_sheet.png";
     const string RunSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_run_sheet.png";
+    const string GetupSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_getup_sheet.png";
     const string TilesetPath = "Assets/Art/Environment/map_tileset_cathedral.png";
 
     [SerializeField] bool buildOnEnable = true;
@@ -51,6 +52,7 @@ public class StepAPlayground : MonoBehaviour
 
         var idleFrames = BuildIdleCycle(LoadSheet(IdleSheetPath));
         var runFrames = LoadSheet(RunSheetPath);
+        var getupRaw = LoadSheet(GetupSheetPath);
         if (idle == null)
             idle = MakeSolidSprite(new Color(0.9f, 0.9f, 0.92f), 128, 256);
         if (run == null)
@@ -59,6 +61,7 @@ public class StepAPlayground : MonoBehaviour
             idleFrames = new[] { idle };
         if (runFrames.Length == 0)
             runFrames = new[] { run };
+        var getupFrames = BuildGetupCycle(getupRaw, idleFrames);
         if (floor == null)
             floor = MakeSolidSprite(new Color(0.28f, 0.29f, 0.32f), 256, 64);
         if (ledge == null)
@@ -76,9 +79,11 @@ public class StepAPlayground : MonoBehaviour
         PlacePlatform(platforms, ledge, 6.4f, 2.65f, scale);
 
         float floorTop = floor.bounds.size.y * scale;
-        var player = CreatePlayer(idleFrames, runFrames);
+        var player = CreatePlayer(idleFrames, runFrames, getupFrames);
         player.transform.SetParent(transform, true);
+        // Capsule bottom is at local y=0; sit just above the platform top.
         player.transform.position = new Vector3(-6.5f, floorTop + 0.02f, 0f);
+        player.SnapToGround();
         player.SpawnPosition = player.transform.position;
 
         var cam = Camera.main;
@@ -98,7 +103,7 @@ public class StepAPlayground : MonoBehaviour
             view?.Frame(new Bounds(new Vector3(0f, 1.8f, 0f), new Vector3(26f, 12f, 1f)), false);
         }
 #endif
-        Debug.Log("Step A playground ready. Press Play, then move with A/D and jump with Space.");
+        Debug.Log("Step A playground ready. Press Play — getup plays first, then move with A/D and jump with Space.");
     }
 
     void ClearSpawned()
@@ -111,13 +116,35 @@ public class StepAPlayground : MonoBehaviour
     {
         var idleFrames = BuildIdleCycle(LoadSheet(IdleSheetPath));
         var runFrames = LoadSheet(RunSheetPath);
-        if (idleFrames.Length == 0 && runFrames.Length == 0)
+        var getupRaw = LoadSheet(GetupSheetPath);
+        var getupFrames = BuildGetupCycle(getupRaw, idleFrames);
+        if (idleFrames.Length == 0 && runFrames.Length == 0 && getupFrames.Length == 0)
             return;
         if (runFrames.Length == 0)
             runFrames = idleFrames;
-        controller.SetAnimationFrames(idleFrames, runFrames);
+        controller.SetAnimationFrames(idleFrames, runFrames, getupFrames);
         var anim = controller.GetComponent<PlayerSpriteAnimator>();
         anim?.ConfigureIdleTiming(3f);
+        anim?.ConfigureGetupTiming(6f);
+        AlignPlayerPresentation(controller);
+    }
+
+    static void AlignPlayerPresentation(PlayerController controller)
+    {
+        if (controller == null)
+            return;
+
+        // Standing capsule bottom at y=0; getup shares that bottom so shrink never lifts the root.
+        const float standH = 1.36f;
+        const float getupH = 0.42f;
+        controller.ConfigureColliders(
+            standingSize: new Vector2(0.46f, standH),
+            standingOffset: new Vector2(0f, standH * 0.5f),
+            getupSize: new Vector2(0.7f, getupH),
+            getupOffset: new Vector2(0f, getupH * 0.5f));
+        // Feet Y comes from PlayerController.visualFeetOffset (Inspector), not a hardcoded value.
+        if (Application.isPlaying)
+            controller.SnapToGround();
     }
 
     static void DestroySafe(Object obj)
@@ -144,7 +171,7 @@ public class StepAPlayground : MonoBehaviour
             cam.transform.position = new Vector3(0f, 2f, -10f);
     }
 
-    PlayerController CreatePlayer(Sprite[] idleFrames, Sprite[] runFrames)
+    PlayerController CreatePlayer(Sprite[] idleFrames, Sprite[] runFrames, Sprite[] getupFrames)
     {
         var root = new GameObject("Player");
         root.tag = "Player";
@@ -161,16 +188,19 @@ public class StepAPlayground : MonoBehaviour
 
         var capsule = root.AddComponent<CapsuleCollider2D>();
         capsule.direction = CapsuleDirection2D.Vertical;
-        capsule.size = new Vector2(0.46f, 1.36f);
-        capsule.offset = new Vector2(0f, 0.7f);
+        const float standH = 1.36f;
+        capsule.size = new Vector2(0.46f, standH);
+        capsule.offset = new Vector2(0f, standH * 0.5f);
 
         var visual = new GameObject("Visual");
         visual.transform.SetParent(root.transform, false);
-        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localPosition = new Vector3(0f, -0.05f, 0f);
         visual.transform.localScale = Vector3.one * 0.53f;
 
         var sr = visual.AddComponent<SpriteRenderer>();
-        var first = idleFrames != null && idleFrames.Length > 0 ? idleFrames[0] : null;
+        var first = getupFrames != null && getupFrames.Length > 0 && getupFrames[0] != null
+            ? getupFrames[0]
+            : (idleFrames != null && idleFrames.Length > 0 ? idleFrames[0] : null);
         ApplySprite(sr, first, "Entities", 10);
 
         var groundCheck = new GameObject("GroundCheck");
@@ -180,9 +210,11 @@ public class StepAPlayground : MonoBehaviour
         root.AddComponent<PlayerSpriteAnimator>();
         var controller = root.AddComponent<PlayerController>();
         controller.Bind(sr, groundCheck.transform);
-        controller.SetAnimationFrames(idleFrames, runFrames);
+        controller.SetAnimationFrames(idleFrames, runFrames, getupFrames);
         var anim = root.GetComponent<PlayerSpriteAnimator>();
         anim?.ConfigureIdleTiming(3f);
+        anim?.ConfigureGetupTiming(6f);
+        AlignPlayerPresentation(controller);
         return controller;
     }
 
@@ -265,6 +297,80 @@ public class StepAPlayground : MonoBehaviour
             var peak = frames[2];
             var exhale = frames[3];
             return new[] { rest, rest, inhale, peak, peak, exhale };
+        }
+
+        return frames;
+    }
+
+    /// <summary>
+    /// Getup timing: linger on faint, ease through rises, soft-land on idle so the handoff does not pop.
+    /// Preferred sheet (7): 0 lie → 1 stir → 2 crawl → 3 kneel → 4 half-rise → 5 mid-rise → 6 stand(=idle).
+    /// Legacy sheet (6): same without mid-rise.
+    /// </summary>
+    static Sprite[] BuildGetupCycle(Sprite[] frames, Sprite[] idleFrames)
+    {
+        if (frames == null || frames.Length == 0)
+            return frames;
+
+        Sprite idle = null;
+        if (idleFrames != null && idleFrames.Length > 0)
+            idle = idleFrames[0];
+
+        if (frames.Length >= 7 &&
+            frames[0] != null && frames[1] != null && frames[2] != null &&
+            frames[3] != null && frames[4] != null && frames[5] != null && frames[6] != null)
+        {
+            var lie = frames[0];
+            var stir = frames[1];
+            var crawl = frames[2];
+            var kneel = frames[3];
+            var half = frames[4];
+            var mid = frames[5];
+            var stand = frames[6];
+            // Hold sheet stand until unlock; getup_6 art is idle-matched so handoff does not size-pop.
+            return new[]
+            {
+                lie, lie, lie,
+                stir,
+                crawl, crawl,
+                kneel,
+                half, half,
+                mid, mid,
+                stand, stand, stand
+            };
+        }
+
+        if (frames.Length >= 6 &&
+            frames[0] != null && frames[1] != null && frames[2] != null &&
+            frames[3] != null && frames[4] != null && frames[5] != null)
+        {
+            var lie = frames[0];
+            var stir = frames[1];
+            var crawl = frames[2];
+            var kneel = frames[3];
+            var rise = frames[4];
+            var stand = frames[5];
+            var settle = idle != null ? idle : stand;
+
+            return new[]
+            {
+                lie, lie, lie,
+                stir,
+                crawl, crawl,
+                kneel,
+                rise, rise, rise,
+                stand,
+                settle, settle
+            };
+        }
+
+        if (idle != null)
+        {
+            var withSettle = new Sprite[frames.Length + 2];
+            frames.CopyTo(withSettle, 0);
+            withSettle[frames.Length] = idle;
+            withSettle[frames.Length + 1] = idle;
+            return withSettle;
         }
 
         return frames;

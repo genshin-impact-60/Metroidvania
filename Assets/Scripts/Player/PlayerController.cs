@@ -20,8 +20,18 @@ public class PlayerController : MonoBehaviour
     [Header("Visual")]
     [SerializeField] SpriteRenderer visual;
     [SerializeField] PlayerSpriteAnimator animator;
+    [SerializeField] bool playGetupOnStart = true;
+    [SerializeField]
+    [Tooltip("Sole source for Visual local Y (boots to floor). Edit this — not Visual Transform. Applied on Awake/Bind.")]
+    float visualFeetOffset = -0.2f;
+
+    [Header("Getup Collider")]
+    [SerializeField] bool shrinkColliderDuringGetup = true;
+    [SerializeField] Vector2 getupColliderSize = new Vector2(0.7f, 0.42f);
+    [SerializeField] Vector2 getupColliderOffset = new Vector2(0f, 0.21f);
 
     Rigidbody2D _rb;
+    CapsuleCollider2D _capsule;
     InputAction _move;
     InputAction _jump;
 
@@ -32,6 +42,11 @@ public class PlayerController : MonoBehaviour
     bool _facingRight = true;
     Vector3 _spawnPosition;
     PhysicsMaterial2D _noFriction;
+    bool _introGetupStarted;
+    bool _wasControlLocked;
+    Vector2 _standingColliderSize;
+    Vector2 _standingColliderOffset;
+    bool _hasStandingCollider;
 
     public Vector2 SpawnPosition
     {
@@ -41,6 +56,8 @@ public class PlayerController : MonoBehaviour
 
     public bool IsGrounded { get; private set; }
 
+    public bool IsControlLocked => animator != null && animator.IsBusy;
+
     public void Bind(SpriteRenderer spriteRenderer, Transform ground)
     {
         visual = spriteRenderer;
@@ -48,6 +65,63 @@ public class PlayerController : MonoBehaviour
         if (animator == null)
             animator = GetComponent<PlayerSpriteAnimator>();
         animator?.Bind(spriteRenderer);
+        CacheCapsule();
+        ApplyVisualFeetOffset(visualFeetOffset);
+    }
+
+    /// <summary>Standing capsule with bottom at y=0; getup capsule shares that bottom.</summary>
+    public void ConfigureColliders(Vector2 standingSize, Vector2 standingOffset, Vector2 getupSize, Vector2 getupOffset)
+    {
+        CacheCapsule();
+        getupColliderSize = getupSize;
+        getupColliderOffset = getupOffset;
+        _standingColliderSize = standingSize;
+        _standingColliderOffset = standingOffset;
+        _hasStandingCollider = true;
+        if (_capsule == null)
+            return;
+        if (!IsControlLocked)
+        {
+            _capsule.size = standingSize;
+            _capsule.offset = standingOffset;
+        }
+    }
+
+    public void ApplyVisualFeetOffset(float localY)
+    {
+        visualFeetOffset = localY;
+        if (visual == null)
+            return;
+        var t = visual.transform;
+        var p = t.localPosition;
+        p.y = visualFeetOffset;
+        t.localPosition = p;
+    }
+
+    /// <summary>Raycast down and park capsule bottom on the first Ground hit.</summary>
+    public void SnapToGround(float maxDistance = 4f)
+    {
+        CacheCapsule();
+        if (_rb == null)
+            _rb = GetComponent<Rigidbody2D>();
+        if (_capsule == null)
+            return;
+
+        float bottom = _capsule.offset.y - _capsule.size.y * 0.5f;
+        var origin = (Vector2)transform.position + Vector2.up * Mathf.Max(0.2f, _capsule.size.y * 0.5f);
+        var hit = Physics2D.Raycast(origin, Vector2.down, maxDistance, GameLayers.GroundMask);
+        if (hit.collider == null)
+            return;
+
+        var p = transform.position;
+        p.y = hit.point.y - bottom;
+        transform.position = p;
+        if (_rb != null)
+        {
+            // Keep body pose in sync — otherwise Interpolate lerps from a stale rb.position on unlock.
+            _rb.position = p;
+            _rb.linearVelocity = Vector2.zero;
+        }
     }
 
     public void SetSprites(Sprite idle, Sprite run)
@@ -57,7 +131,7 @@ public class PlayerController : MonoBehaviour
             run != null ? new[] { run } : null);
     }
 
-    public void SetAnimationFrames(Sprite[] idle, Sprite[] run)
+    public void SetAnimationFrames(Sprite[] idle, Sprite[] run, Sprite[] getup = null)
     {
         if (animator == null)
             animator = GetComponent<PlayerSpriteAnimator>();
@@ -65,8 +139,47 @@ public class PlayerController : MonoBehaviour
             animator = gameObject.AddComponent<PlayerSpriteAnimator>();
         animator.Bind(visual);
         animator.SetFrames(idle, run);
-        if (visual != null && idle != null && idle.Length > 0)
+        animator.SetGetupFrames(getup);
+
+        if (visual == null)
+            return;
+
+        if (getup != null && getup.Length > 0 && getup[0] != null && playGetupOnStart)
+            visual.sprite = getup[0];
+        else if (idle != null && idle.Length > 0 && idle[0] != null)
             visual.sprite = idle[0];
+    }
+
+    /// <summary>Play one-shot getup and lock move/jump until it finishes.</summary>
+    public bool PlayGetupIntro()
+    {
+        if (animator == null)
+            animator = GetComponent<PlayerSpriteAnimator>();
+        if (animator == null || !animator.HasGetup)
+            return false;
+
+        _moveInput = 0f;
+        _jumpBuffer = 0f;
+        _cutJump = false;
+        _facingRight = true;
+        if (visual != null)
+        {
+            var scale = visual.transform.localScale;
+            scale.x = Mathf.Abs(scale.x);
+            visual.transform.localScale = scale;
+        }
+
+        bool started = animator.PlayGetup();
+        if (started)
+        {
+            // Getup capsule + pinned physics first, then snap — avoids Dynamic depenetration lift.
+            ApplyGetupCollider(true);
+            SetIntroPhysicsPinned(true);
+            SnapToGround();
+            if (_rb != null)
+                _rb.position = transform.position;
+        }
+        return started;
     }
 
     void Awake()
@@ -91,7 +204,34 @@ public class PlayerController : MonoBehaviour
         if (animator == null)
             animator = GetComponent<PlayerSpriteAnimator>();
 
+        CacheCapsule();
+        ApplyVisualFeetOffset(visualFeetOffset);
         BindInput();
+        _spawnPosition = transform.position;
+    }
+
+    void Start()
+    {
+        if (!Application.isPlaying)
+            return;
+
+        // Scene may serialize Kinematic from edit-mode builds; force gameplay body.
+        if (_rb != null)
+            _rb.bodyType = RigidbodyType2D.Dynamic;
+
+        if (playGetupOnStart && !_introGetupStarted)
+        {
+            _introGetupStarted = true;
+            if (PlayGetupIntro())
+            {
+                _spawnPosition = transform.position;
+                return;
+            }
+        }
+
+        if (_rb != null)
+            _rb.gravityScale = gravityScale;
+        SnapToGround();
         _spawnPosition = transform.position;
     }
 
@@ -121,6 +261,31 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        bool locked = IsControlLocked;
+        if (_wasControlLocked && !locked)
+            EndIntroLock();
+        _wasControlLocked = locked;
+
+        if (locked)
+        {
+            _moveInput = 0f;
+            _cutJump = false;
+
+            // Keep jump buffer so a press near the end of getup still fires after unlock.
+            if (_jump != null && _jump.WasPressedThisFrame())
+                _jumpBuffer = jumpBufferTime;
+            if (_jumpBuffer > 0f)
+                _jumpBuffer -= Time.deltaTime;
+
+            if (_rb != null)
+                _rb.linearVelocity = Vector2.zero;
+
+            animator?.SetLocomotion(IsGrounded, false);
+            if (transform.position.y < -12f)
+                Respawn();
+            return;
+        }
+
         if (_move != null)
             _moveInput = _move.ReadValue<Vector2>().x;
 
@@ -144,6 +309,13 @@ public class PlayerController : MonoBehaviour
         ProbeGround();
 
         var velocity = _rb.linearVelocity;
+
+        if (IsControlLocked)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
         velocity.x = _moveInput * moveSpeed;
 
         if (_jumpBuffer > 0f && _coyote > 0f)
@@ -199,8 +371,80 @@ public class PlayerController : MonoBehaviour
 
     public void Respawn()
     {
+        ApplyGetupCollider(false);
+        SetIntroPhysicsPinned(false);
+        _wasControlLocked = false;
         _rb.linearVelocity = Vector2.zero;
         transform.position = _spawnPosition;
+        _moveInput = 0f;
+        _jumpBuffer = 0f;
+        _cutJump = false;
+    }
+
+    void CacheCapsule()
+    {
+        if (_capsule == null)
+            _capsule = GetComponent<CapsuleCollider2D>();
+        if (_capsule == null || _hasStandingCollider)
+            return;
+
+        _standingColliderSize = _capsule.size;
+        _standingColliderOffset = _capsule.offset;
+        _hasStandingCollider = true;
+    }
+
+    void ApplyGetupCollider(bool getup)
+    {
+        if (!shrinkColliderDuringGetup)
+            return;
+
+        CacheCapsule();
+        if (_capsule == null || !_hasStandingCollider)
+            return;
+
+        if (getup)
+        {
+            _capsule.size = getupColliderSize;
+            _capsule.offset = getupColliderOffset;
+        }
+        else
+        {
+            _capsule.size = _standingColliderSize;
+            _capsule.offset = _standingColliderOffset;
+        }
+    }
+
+    void SetIntroPhysicsPinned(bool pinned)
+    {
+        if (_rb == null)
+            return;
+        if (pinned)
+        {
+            _rb.linearVelocity = Vector2.zero;
+            _rb.gravityScale = 0f;
+            // Kinematic avoids Dynamic depenetration lifting the root off the snap pose.
+            _rb.bodyType = RigidbodyType2D.Kinematic;
+            _rb.position = transform.position;
+        }
+        else
+        {
+            // Sync before Dynamic so interpolation does not ease down from an old body pose.
+            var interp = _rb.interpolation;
+            _rb.interpolation = RigidbodyInterpolation2D.None;
+            _rb.position = transform.position;
+            _rb.linearVelocity = Vector2.zero;
+            _rb.gravityScale = gravityScale;
+            _rb.bodyType = RigidbodyType2D.Dynamic;
+            _rb.interpolation = interp;
+        }
+    }
+
+    void EndIntroLock()
+    {
+        ApplyGetupCollider(false);
+        // Intro already snapped while pinned; skip SnapToGround here (it + Interpolate read as a drop).
+        SetIntroPhysicsPinned(false);
+        _spawnPosition = transform.position;
     }
 
     void OnDrawGizmosSelected()

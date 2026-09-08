@@ -5,8 +5,10 @@ public class PlayerSpriteAnimator : MonoBehaviour
     [SerializeField] SpriteRenderer target;
     [SerializeField] Sprite[] idleFrames;
     [SerializeField] Sprite[] runFrames;
+    [SerializeField] Sprite[] getupFrames;
     [SerializeField] float idleFps = 3f;
     [SerializeField] float runFps = 12f;
+    [SerializeField] float getupFps = 6f;
     [SerializeField] float runEnterDelay = 0.05f;
     [SerializeField] float runExitDelay = 0.12f;
     [SerializeField] [Tooltip("Run-sheet frame held while airborne (0-based). For an 8-frame cycle, mid-stride hang is usually 3.")]
@@ -16,7 +18,8 @@ public class PlayerSpriteAnimator : MonoBehaviour
     {
         Idle,
         Run,
-        Air
+        Air,
+        Getup
     }
 
     Pose _pose = Pose.Idle;
@@ -35,31 +38,72 @@ public class PlayerSpriteAnimator : MonoBehaviour
 
     public bool HasRunCycle => runFrames != null && runFrames.Length > 1;
 
+    public bool HasGetup => Has(getupFrames);
+
+    /// <summary>True while a one-shot getup (or similar) blocks locomotion.</summary>
+    public bool IsBusy => _pose == Pose.Getup;
+
     public void ConfigureIdleTiming(float fps)
     {
         idleFps = Mathf.Max(0.1f, fps);
+    }
+
+    public void ConfigureGetupTiming(float fps)
+    {
+        getupFps = Mathf.Max(0.1f, fps);
     }
 
     public void SetFrames(Sprite[] idle, Sprite[] run)
     {
         idleFrames = idle;
         runFrames = run;
-        _pose = Pose.Idle;
+        if (_pose != Pose.Getup)
+        {
+            _pose = Pose.Idle;
+            _frame = 0;
+            _frameTime = 0f;
+            _runHold = 0f;
+            _idleHold = 0f;
+            Apply();
+        }
+    }
+
+    public void SetGetupFrames(Sprite[] getup)
+    {
+        getupFrames = getup;
+    }
+
+    /// <summary>Play getup once from frame 0. Returns false if no getup frames.</summary>
+    public bool PlayGetup()
+    {
+        if (!Has(getupFrames))
+            return false;
+
+        _pose = Pose.Getup;
         _frame = 0;
         _frameTime = 0f;
         _runHold = 0f;
         _idleHold = 0f;
         Apply();
+        return true;
     }
 
     public void SetLocomotion(bool grounded, bool moving)
     {
+        if (_pose == Pose.Getup)
+            return;
         _grounded = grounded;
         _moving = moving;
     }
 
     void Update()
     {
+        if (_pose == Pose.Getup)
+        {
+            AdvanceGetup();
+            return;
+        }
+
         if (!_grounded)
         {
             if (_wasGrounded)
@@ -140,6 +184,45 @@ public class PlayerSpriteAnimator : MonoBehaviour
         Apply();
     }
 
+    void AdvanceGetup()
+    {
+        if (!Has(getupFrames) || getupFps <= 0f)
+        {
+            FinishGetup();
+            return;
+        }
+
+        _frameTime += Time.deltaTime * getupFps;
+        if (_frameTime < 1f)
+        {
+            Apply();
+            return;
+        }
+
+        int steps = Mathf.FloorToInt(_frameTime);
+        _frameTime -= steps;
+        _frame += steps;
+
+        if (_frame >= getupFrames.Length)
+        {
+            FinishGetup();
+            return;
+        }
+
+        Apply();
+    }
+
+    void FinishGetup()
+    {
+        // Land on idle without re-Apply flash if last getup cell already is idle_0.
+        _pose = Pose.Idle;
+        _frame = 0;
+        _frameTime = 0f;
+        _runHold = 0f;
+        _idleHold = 0f;
+        Apply();
+    }
+
     void Advance()
     {
         if (_pose == Pose.Air)
@@ -165,6 +248,8 @@ public class PlayerSpriteAnimator : MonoBehaviour
 
     Sprite[] CurrentFrames()
     {
+        if (_pose == Pose.Getup && Has(getupFrames))
+            return getupFrames;
         if ((_pose == Pose.Run || _pose == Pose.Air) && Has(runFrames))
             return runFrames;
         return idleFrames;
