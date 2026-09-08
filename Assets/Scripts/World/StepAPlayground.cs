@@ -8,12 +8,18 @@ public class StepAPlayground : MonoBehaviour
     const string IdlePath = "Assets/Art/Characters/protagonist_cursed_pilgrim_chibi.png";
     const string RunPath = "Assets/Art/Characters/protagonist_cursed_pilgrim_chibi_run.png";
     const string IdleSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_idle_sheet.png";
+    const string IdleOathbladeSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_idle_oathblade_sheet.png";
     const string RunSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_run_sheet.png";
     const string JumpSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_jump_sheet.png";
     const string GetupSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_getup_sheet.png";
-    const string TilesetPath = "Assets/Art/Environment/map_tileset_cathedral.png";
+    const string TileDir = "Assets/Art/Environment/Tilesets/cathedral/";
+    const string FloorTilePath = TileDir + "map_tileset_cathedral_1.png";
+    const string CrackedTilePath = TileDir + "map_tileset_cathedral_2.png";
+    const string LedgeTilePath = TileDir + "map_tileset_cathedral_9.png";
 
     [SerializeField] bool buildOnEnable = true;
+    [SerializeField] [Tooltip("Preview armed idle after getup (残誓). Zone A intro stays unarmed.")]
+    bool previewOathbladeIdle = true;
 
     void OnEnable()
     {
@@ -47,11 +53,12 @@ public class StepAPlayground : MonoBehaviour
 
         var idle = LoadSprite(IdlePath, "protagonist_cursed_pilgrim_chibi_0");
         var run = LoadSprite(RunPath, "protagonist_cursed_pilgrim_chibi_run_0");
-        var floor = LoadSprite(TilesetPath, "map_tileset_cathedral_1");
-        var ledge = LoadSprite(TilesetPath, "map_tileset_cathedral_9");
-        var cracked = LoadSprite(TilesetPath, "map_tileset_cathedral_2");
+        var floor = LoadSprite(FloorTilePath, "map_tileset_cathedral_1");
+        var ledge = LoadSprite(LedgeTilePath, "map_tileset_cathedral_9");
+        var cracked = LoadSprite(CrackedTilePath, "map_tileset_cathedral_2");
 
         var idleFrames = BuildIdleCycle(LoadSheet(IdleSheetPath));
+        var idleArmedFrames = BuildIdleCycle(LoadSheet(IdleOathbladeSheetPath));
         var runFrames = LoadSheet(RunSheetPath);
         var jumpFrames = LoadSheet(JumpSheetPath);
         var getupRaw = LoadSheet(GetupSheetPath);
@@ -81,7 +88,7 @@ public class StepAPlayground : MonoBehaviour
         PlacePlatform(platforms, ledge, 6.4f, 2.65f, scale);
 
         float floorTop = floor.bounds.size.y * scale;
-        var player = CreatePlayer(idleFrames, runFrames, getupFrames, jumpFrames);
+        var player = CreatePlayer(idleFrames, runFrames, getupFrames, jumpFrames, idleArmedFrames, previewOathbladeIdle);
         player.transform.SetParent(transform, true);
         // Capsule bottom is at local y=0; sit just above the platform top.
         player.transform.position = new Vector3(-6.5f, floorTop + 0.02f, 0f);
@@ -105,7 +112,9 @@ public class StepAPlayground : MonoBehaviour
             view?.Frame(new Bounds(new Vector3(0f, 1.8f, 0f), new Vector3(26f, 12f, 1f)), false);
         }
 #endif
-        Debug.Log("Step A playground ready. Press Play — getup plays first, then move with A/D and jump with Space.");
+        Debug.Log(previewOathbladeIdle
+            ? "Step A playground ready. Armed idle preview on — getup then 残誓 idle. A/D move, Space jump."
+            : "Step A playground ready. Press Play — getup plays first, then move with A/D and jump with Space.");
     }
 
     void ClearSpawned()
@@ -117,6 +126,7 @@ public class StepAPlayground : MonoBehaviour
     void RefreshPlayerAnimation(PlayerController controller)
     {
         var idleFrames = BuildIdleCycle(LoadSheet(IdleSheetPath));
+        var idleArmedFrames = BuildIdleCycle(LoadSheet(IdleOathbladeSheetPath));
         var runFrames = LoadSheet(RunSheetPath);
         var jumpFrames = LoadSheet(JumpSheetPath);
         var getupRaw = LoadSheet(GetupSheetPath);
@@ -125,7 +135,8 @@ public class StepAPlayground : MonoBehaviour
             return;
         if (runFrames.Length == 0)
             runFrames = idleFrames;
-        controller.SetAnimationFrames(idleFrames, runFrames, getupFrames, jumpFrames);
+        bool keepArmed = controller.HasOathblade || previewOathbladeIdle;
+        controller.SetAnimationFrames(idleFrames, runFrames, getupFrames, jumpFrames, idleArmedFrames, keepArmed);
         var anim = controller.GetComponent<PlayerSpriteAnimator>();
         anim?.ConfigureIdleTiming(3f);
         anim?.ConfigureGetupTiming(6f);
@@ -137,17 +148,51 @@ public class StepAPlayground : MonoBehaviour
         if (controller == null)
             return;
 
-        // Standing capsule bottom at y=0; getup shares that bottom so shrink never lifts the root.
-        const float standH = 1.36f;
+        // Defaults match Zone A; Bake Colliders → Layout writes ZoneA_Layout.json overrides.
+        var standingSize = new Vector2(0.5535295f, 1.705085f);
+        var standingOffset = new Vector2(0.1400892f, 0.629543f);
         const float getupH = 0.42f;
+        float standBottom = standingOffset.y - standingSize.y * 0.5f;
+        var getupSize = new Vector2(0.7f, getupH);
+        var getupOffset = new Vector2(standingOffset.x, standBottom + getupH * 0.5f);
+
+        var layout = TryLoadZoneALayout();
+        if (layout != null &&
+            layout.TryGetPlayerColliders(out var bakedStand, out var bakedStandOff, out var bakedGetup, out var bakedGetupOff))
+        {
+            standingSize = bakedStand;
+            standingOffset = bakedStandOff;
+            getupSize = bakedGetup;
+            getupOffset = bakedGetupOff;
+        }
+
         controller.ConfigureColliders(
-            standingSize: new Vector2(0.46f, standH),
-            standingOffset: new Vector2(0f, standH * 0.5f),
-            getupSize: new Vector2(0.7f, getupH),
-            getupOffset: new Vector2(0f, getupH * 0.5f));
+            standingSize: standingSize,
+            standingOffset: standingOffset,
+            getupSize: getupSize,
+            getupOffset: getupOffset);
         // Feet Y comes from PlayerController.visualFeetOffset (Inspector), not a hardcoded value.
         if (Application.isPlaying)
             controller.SnapToGround();
+    }
+
+    static ZoneALayoutSnapshot TryLoadZoneALayout()
+    {
+#if UNITY_EDITOR
+        string path = CathedralIntroZoneA.LayoutAssetPath;
+        if (System.IO.File.Exists(path))
+        {
+            try
+            {
+                return JsonUtility.FromJson<ZoneALayoutSnapshot>(System.IO.File.ReadAllText(path));
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Step A: failed to read Zone A layout for player colliders: {e.Message}");
+            }
+        }
+#endif
+        return null;
     }
 
     static void DestroySafe(Object obj)
@@ -174,7 +219,13 @@ public class StepAPlayground : MonoBehaviour
             cam.transform.position = new Vector3(0f, 2f, -10f);
     }
 
-    PlayerController CreatePlayer(Sprite[] idleFrames, Sprite[] runFrames, Sprite[] getupFrames, Sprite[] jumpFrames)
+    PlayerController CreatePlayer(
+        Sprite[] idleFrames,
+        Sprite[] runFrames,
+        Sprite[] getupFrames,
+        Sprite[] jumpFrames,
+        Sprite[] idleArmedFrames = null,
+        bool equipOathblade = false)
     {
         var root = new GameObject("Player");
         root.tag = "Player";
@@ -191,9 +242,8 @@ public class StepAPlayground : MonoBehaviour
 
         var capsule = root.AddComponent<CapsuleCollider2D>();
         capsule.direction = CapsuleDirection2D.Vertical;
-        const float standH = 1.36f;
-        capsule.size = new Vector2(0.46f, standH);
-        capsule.offset = new Vector2(0f, standH * 0.5f);
+        capsule.size = new Vector2(0.5535295f, 1.705085f);
+        capsule.offset = new Vector2(0.1400892f, 0.629543f);
 
         var visual = new GameObject("Visual");
         visual.transform.SetParent(root.transform, false);
@@ -208,12 +258,14 @@ public class StepAPlayground : MonoBehaviour
 
         var groundCheck = new GameObject("GroundCheck");
         groundCheck.transform.SetParent(root.transform, false);
-        groundCheck.transform.localPosition = new Vector3(0f, 0.06f, 0f);
+        // Final pose comes from PlayerController.SyncGroundCheckToCapsule after ConfigureColliders.
+        float standBottom = 0.629543f - 1.705085f * 0.5f;
+        groundCheck.transform.localPosition = new Vector3(0.1400892f, standBottom, 0f);
 
         root.AddComponent<PlayerSpriteAnimator>();
         var controller = root.AddComponent<PlayerController>();
         controller.Bind(sr, groundCheck.transform);
-        controller.SetAnimationFrames(idleFrames, runFrames, getupFrames, jumpFrames);
+        controller.SetAnimationFrames(idleFrames, runFrames, getupFrames, jumpFrames, idleArmedFrames, equipOathblade);
         var anim = root.GetComponent<PlayerSpriteAnimator>();
         anim?.ConfigureIdleTiming(3f);
         anim?.ConfigureGetupTiming(6f);

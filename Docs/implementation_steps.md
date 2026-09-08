@@ -4,7 +4,8 @@
 
 相关文档：
 
-- 技能与硬顺序：[Skills and route design.txt](./Skills%20and%20route%20design.txt)
+- 技能与硬顺序：[Skills and route design.md](./Skills%20and%20route%20design.md)
+- 序章房间：[Rooms/cathedral_intro.md](./Rooms/cathedral_intro.md)
 - 敌人设定：[Bestiary/README.md](./Bestiary/README.md)
 - 后续出图：[Art/asset_checklist.md](./Art/asset_checklist.md)
 
@@ -312,7 +313,7 @@ Automatic 切完后，给每块加 `BoxCollider2D`（或 Composite）。只要�
 1. 放入 `map_room_sample_cathedral.png`，Scale 调到房间宽约 30～40 单位。Sorting = Background。
 2. 按画里的地板、楼梯、浮台，用空物体 + `BoxCollider2D` 描碰撞（Layer = Ground）。
 3. 再铺 `map_bg_cathedral.png` 在更后面，略放大，做一点视差。
-4. 主角出生在底层中央。
+4. 主角出生在底层中央左侧 **Intro 侧厅**（getup 后空手；同场景子区，见 [Rooms/cathedral_intro.md](./Rooms/cathedral_intro.md)）。
 5. 相机：`Cinemachine` 或简单跟随，Orthographic Size 约 6～8，只跟 X/Y，别旋转。
 
 这间的职责：证明比例。chibi 站在样板房间的地板上应该像「人站在大厅里」，而不是蚂蚁或巨人。
@@ -333,9 +334,11 @@ Automatic 切完后，给每块加 `BoxCollider2D`（或 Composite）。只要�
 
 | 物件 | 资源 | 作用 |
 |------|------|------|
-| 出生点旁存档 | `save_cathedral_off/on` | 教交互 |
+| 出生点旁存档 | `save_cathedral_off/on` | 教交互（SV1） |
+| 残誓没收架（序章） | 交互物 + 概念图占位 | 解锁近战（`HasOathblade`）；空手段无战斗怪 |
+| 拾剑后存档 | `save_cathedral_off/on` | 出口前第二存档（SV2） |
 | 底层地刺 | `spike_floor_cathedral` | 教伤害/击退 |
-| 一侧石梯 | `ladder_stone_*` | 教垂直 |
+| 一侧石梯 | `ladder_stone_*` | 教垂直（中殿侧，非 Intro） |
 | 普通门（开） | `door_basic_open` | 房间过渡占位 |
 | 锁门 | `door_locked` + `key_common` | 教钥匙 |
 | 裂隙门（关） | `gate_dash_closed` | 先看见，拿到冲刺再开 |
@@ -479,6 +482,8 @@ None, Dash, WallJump, StainedLight, GroundSlam, Dive, DoubleJump, Chrono
 ### 8.2 玩家攻击
 
 没有攻击帧：出招时打开 `AttackHitbox` 0.15 s，精灵闪一下或前移一点。命中敌人扣血、短击退。够用。
+
+取得残誓前：`HasOathblade == false` 时忽略 Attack 输入。拾取交互设 flag 后才启用；不必另做空手攻击动画。
 
 ---
 

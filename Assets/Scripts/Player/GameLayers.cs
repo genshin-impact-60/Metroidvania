@@ -11,5 +11,7 @@ public static class GameLayers
 
     public static int PlayerLayer => LayerMask.NameToLayer(Player);
     public static int GroundLayer => LayerMask.NameToLayer(Ground);
+    public static int InteractLayer => LayerMask.NameToLayer(Interact);
+    public static int HazardLayer => LayerMask.NameToLayer(Hazard);
     public static int GroundMask => LayerMask.GetMask(Ground);
 }

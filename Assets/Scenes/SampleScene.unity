@@ -1028,6 +1028,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StepAPlayground
   buildOnEnable: 1
+  previewOathbladeIdle: 1
 --- !u!1 &1062399958
 GameObject:
   m_ObjectHideFlags: 0
@@ -1054,7 +1055,7 @@ Transform:
   m_GameObject: {fileID: 1062399958}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.28, z: 0}
+  m_LocalPosition: {x: 0, y: -0.34, z: 0}
   m_LocalScale: {x: 0.53, y: 0.53, z: 0.53}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1109,7 +1110,7 @@ SpriteRenderer:
   m_SortingLayer: 5
   m_SortingOrder: 10
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7102846193847512007, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
+  m_Sprite: {fileID: 7102846193847512001, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1424,7 +1425,7 @@ Transform:
   m_GameObject: {fileID: 1427406326}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -6.5, y: 1.285625, z: 0}
+  m_LocalPosition: {x: -2.93, y: 1.25, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1456,7 +1457,7 @@ MonoBehaviour:
   visual: {fileID: 1062399960}
   animator: {fileID: 1427406329}
   playGetupOnStart: 1
-  visualFeetOffset: -0.05
+  visualFeetOffset: -0.2
   shrinkColliderDuringGetup: 1
   getupColliderSize: {x: 0.7, y: 0.42}
   getupColliderOffset: {x: 0, y: 0.21}
@@ -1474,12 +1475,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpriteAnimator
   target: {fileID: 1062399960}
   idleFrames:
-  - {fileID: 6117351518783216978, guid: c8f3d20b507e5f9b02d14e66f9b2c357, type: 3}
-  - {fileID: 6117351518783216978, guid: c8f3d20b507e5f9b02d14e66f9b2c357, type: 3}
-  - {fileID: -3863440842149040681, guid: c8f3d20b507e5f9b02d14e66f9b2c357, type: 3}
-  - {fileID: -7500111051714012743, guid: c8f3d20b507e5f9b02d14e66f9b2c357, type: 3}
-  - {fileID: -7500111051714012743, guid: c8f3d20b507e5f9b02d14e66f9b2c357, type: 3}
-  - {fileID: 2250845092291703123, guid: c8f3d20b507e5f9b02d14e66f9b2c357, type: 3}
+  - {fileID: 5921520947851537595, guid: b3b43fbd7ddce60f10013be427fc9f39, type: 3}
+  - {fileID: 5921520947851537595, guid: b3b43fbd7ddce60f10013be427fc9f39, type: 3}
+  - {fileID: -3365417312837604321, guid: b3b43fbd7ddce60f10013be427fc9f39, type: 3}
+  - {fileID: -2806969795946099803, guid: b3b43fbd7ddce60f10013be427fc9f39, type: 3}
+  - {fileID: -2806969795946099803, guid: b3b43fbd7ddce60f10013be427fc9f39, type: 3}
+  - {fileID: -2728929966962877507, guid: b3b43fbd7ddce60f10013be427fc9f39, type: 3}
   runFrames:
   - {fileID: -1701409229672982403, guid: b7e2c19a4f6d4e8a91c03d55e8a1b246, type: 3}
   - {fileID: -7514170319649237642, guid: b7e2c19a4f6d4e8a91c03d55e8a1b246, type: 3}
@@ -1489,13 +1490,19 @@ MonoBehaviour:
   - {fileID: -1651423881469407209, guid: b7e2c19a4f6d4e8a91c03d55e8a1b246, type: 3}
   - {fileID: 4557967313952270113, guid: b7e2c19a4f6d4e8a91c03d55e8a1b246, type: 3}
   - {fileID: -4811390035078623867, guid: b7e2c19a4f6d4e8a91c03d55e8a1b246, type: 3}
+  jumpFrames:
+  - {fileID: 7129485612038471921, guid: 4bcfc325ece4461c8496e785601edef5, type: 3}
+  - {fileID: -3847562910384756123, guid: 4bcfc325ece4461c8496e785601edef5, type: 3}
+  - {fileID: 5567382910456728190, guid: 4bcfc325ece4461c8496e785601edef5, type: 3}
+  - {fileID: -1928374655647382910, guid: 4bcfc325ece4461c8496e785601edef5, type: 3}
   getupFrames:
   - {fileID: 7102846193847512001, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512001, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
-  - {fileID: 7102846193847512001, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
+  - {fileID: 7102846193847512002, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512002, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512003, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512003, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
+  - {fileID: 7102846193847512004, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512004, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512005, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512005, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
@@ -1503,12 +1510,15 @@ MonoBehaviour:
   - {fileID: 7102846193847512006, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512007, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
   - {fileID: 7102846193847512007, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
-  - {fileID: 7102846193847512007, guid: 99f4c365ad914a94784fbc6d3718257f, type: 3}
+  - {fileID: 6117351518783216978, guid: c8f3d20b507e5f9b02d14e66f9b2c357, type: 3}
+  - {fileID: 6117351518783216978, guid: c8f3d20b507e5f9b02d14e66f9b2c357, type: 3}
   idleFps: 3
   runFps: 12
   getupFps: 6
   runEnterDelay: 0.05
   runExitDelay: 0.12
+  jumpTakeoffHold: 0.06
+  jumpApexThreshold: 2.2
   airHangFrame: 3
 --- !u!70 &1427406330
 CapsuleCollider2D:

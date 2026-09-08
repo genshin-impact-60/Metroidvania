@@ -77,6 +77,17 @@ public class PlayerSpriteAnimator : MonoBehaviour
         }
     }
 
+    /// <summary>Swap idle sheet without interrupting getup / run / air.</summary>
+    public void SetIdleFrames(Sprite[] idle)
+    {
+        idleFrames = idle;
+        if (_pose == Pose.Idle)
+        {
+            _frame = Mathf.Clamp(_frame, 0, Has(idleFrames) ? idleFrames.Length - 1 : 0);
+            Apply();
+        }
+    }
+
     public void SetJumpFrames(Sprite[] jump)
     {
         jumpFrames = jump;

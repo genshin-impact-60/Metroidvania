@@ -123,7 +123,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 650
+        width: 808
         height: 900
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -143,9 +143,9 @@ TextureImporter:
       name: getup_1
       rect:
         serializedVersion: 2
-        x: 650
+        x: 808
         y: 0
-        width: 650
+        width: 808
         height: 900
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -165,9 +165,9 @@ TextureImporter:
       name: getup_2
       rect:
         serializedVersion: 2
-        x: 1300
+        x: 1616
         y: 0
-        width: 650
+        width: 808
         height: 900
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -187,9 +187,9 @@ TextureImporter:
       name: getup_3
       rect:
         serializedVersion: 2
-        x: 1950
+        x: 2424
         y: 0
-        width: 650
+        width: 808
         height: 900
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -209,9 +209,9 @@ TextureImporter:
       name: getup_4
       rect:
         serializedVersion: 2
-        x: 2600
+        x: 3232
         y: 0
-        width: 650
+        width: 808
         height: 900
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -231,9 +231,9 @@ TextureImporter:
       name: getup_5
       rect:
         serializedVersion: 2
-        x: 3250
+        x: 4040
         y: 0
-        width: 650
+        width: 808
         height: 900
       alignment: 7
       pivot: {x: 0.5, y: 0}
@@ -253,9 +253,9 @@ TextureImporter:
       name: getup_6
       rect:
         serializedVersion: 2
-        x: 3900
+        x: 4848
         y: 0
-        width: 650
+        width: 808
         height: 900
       alignment: 7
       pivot: {x: 0.5, y: 0}

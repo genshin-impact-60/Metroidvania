@@ -72,11 +72,12 @@ Cursor 图像生成**没有真正 alpha**，不要直接要「透明底」。标
 
 | 动作 | 文件 | 最少帧 | 顺序 / 要点 |
 |------|------|--------|-------------|
-| idle | `..._idle_sheet.png` | 4 | 呼吸循环；脚几乎不动 |
+| idle | `..._idle_sheet.png` | 4 | 呼吸循环；脚几乎不动；**空手**（取残誓前） |
+| idle（持刃） | `..._idle_oathblade_sheet.png` | 4 | 同呼吸循环；右手垂持残誓；尺度锁 idle；帧名 `idle_oathblade_0…3` |
 | run | `..._run_sheet.png` | 8 | 循环跑；可略前倾；尺度锁 idle |
 | jump | `..._jump_sheet.png` | 4 | `0` 起跳蹲 → `1` 升空 → `2` 顶点 → `3` 下落 |
 | getup | `..._getup_sheet.png` | 6～7 | 躺 → 撑起 → 站起；末帧尽量贴近 idle_0 |
-| attack | `..._attack_sheet.png` | 3～5 | 挥刃或刺击；刀光可另出 VFX |
+| attack | `..._attack_sheet.png` | 3～5 | 持 **污光断剑·残誓** 挥刃/刺击；造型与帧顺序见 [protagonist_weapon_spec.md](./protagonist_weapon_spec.md)；刀光优先另出 VFX |
 | hurt | `..._hurt_sheet.png` | 1～2 | 受击后仰/缩 |
 | death | `..._death_sheet.png` | 2～4 | 倒地 / 消散 |
 | crouch | `..._crouch_sheet.png` | 可选 | 蹲或滑；头宽仍锁 idle |
@@ -112,6 +113,7 @@ Cursor 图像生成**没有真正 alpha**，不要直接要「透明底」。标
 |------------|------|
 | `Docs/Art/asset_checklist.md` | 还缺哪些文件、优先级 |
 | 本文 | 主角动作像素尺度与导入约定 |
+| [protagonist_weapon_spec.md](./protagonist_weapon_spec.md) | 主武器「残誓」造型、持刃帧与刀光 VFX 边界 |
 | `StepAPlayground` | 从 `*_sheet.png` 加载帧并交给玩家 |
 | `PlayerSpriteAnimator` | idle / run / jump / getup 播放逻辑 |
 

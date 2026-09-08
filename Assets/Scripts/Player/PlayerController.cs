@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Ground")]
     [SerializeField] Transform groundCheck;
-    [SerializeField] Vector2 groundCheckSize = new Vector2(0.34f, 0.16f);
+    [SerializeField] Vector2 groundCheckSize = new Vector2(0.34f, 0.28f);
 
     [Header("Visual")]
     [SerializeField] SpriteRenderer visual;
@@ -28,7 +28,8 @@ public class PlayerController : MonoBehaviour
     [Header("Getup Collider")]
     [SerializeField] bool shrinkColliderDuringGetup = true;
     [SerializeField] Vector2 getupColliderSize = new Vector2(0.7f, 0.42f);
-    [SerializeField] Vector2 getupColliderOffset = new Vector2(0f, 0.21f);
+    // Bottom aligned with standing capsule (offset y 0.629543, size y 1.705085).
+    [SerializeField] Vector2 getupColliderOffset = new Vector2(0.1400892f, -0.013f);
 
     Rigidbody2D _rb;
     CapsuleCollider2D _capsule;
@@ -47,6 +48,9 @@ public class PlayerController : MonoBehaviour
     Vector2 _standingColliderSize;
     Vector2 _standingColliderOffset;
     bool _hasStandingCollider;
+    Sprite[] _idleUnarmed;
+    Sprite[] _idleArmed;
+    bool _hasOathblade;
 
     public Vector2 SpawnPosition
     {
@@ -55,6 +59,9 @@ public class PlayerController : MonoBehaviour
     }
 
     public bool IsGrounded { get; private set; }
+
+    /// <summary>True after picking up 污光断剑·残誓 — armed idle / future attack unlock.</summary>
+    public bool HasOathblade => _hasOathblade;
 
     public bool IsControlLocked => animator != null && animator.IsBusy;
 
@@ -67,9 +74,10 @@ public class PlayerController : MonoBehaviour
         animator?.Bind(spriteRenderer);
         CacheCapsule();
         ApplyVisualFeetOffset(visualFeetOffset);
+        SyncGroundCheckToCapsule();
     }
 
-    /// <summary>Standing capsule with bottom at y=0; getup capsule shares that bottom.</summary>
+    /// <summary>Standing / getup capsules; getup should share the standing bottom so shrink does not lift the root.</summary>
     public void ConfigureColliders(Vector2 standingSize, Vector2 standingOffset, Vector2 getupSize, Vector2 getupOffset)
     {
         CacheCapsule();
@@ -85,6 +93,72 @@ public class PlayerController : MonoBehaviour
             _capsule.size = standingSize;
             _capsule.offset = standingOffset;
         }
+        SyncGroundCheckToCapsule();
+    }
+
+    /// <summary>
+    /// Read tuneable capsules for bake: live CapsuleCollider2D while standing;
+    /// cached standing if currently in getup shrink; getup from Inspector fields (or live capsule in getup).
+    /// </summary>
+    public void GetColliderTune(
+        out Vector2 standingSize,
+        out Vector2 standingOffset,
+        out Vector2 getupSize,
+        out Vector2 getupOffset)
+    {
+        CacheCapsule();
+        bool inGetupShrink = IsControlLocked && shrinkColliderDuringGetup;
+
+        if (inGetupShrink && _hasStandingCollider)
+        {
+            standingSize = _standingColliderSize;
+            standingOffset = _standingColliderOffset;
+        }
+        else if (_capsule != null)
+        {
+            standingSize = _capsule.size;
+            standingOffset = _capsule.offset;
+        }
+        else if (_hasStandingCollider)
+        {
+            standingSize = _standingColliderSize;
+            standingOffset = _standingColliderOffset;
+        }
+        else
+        {
+            standingSize = new Vector2(0.5535295f, 1.705085f);
+            standingOffset = new Vector2(0.1400892f, 0.629543f);
+        }
+
+        if (inGetupShrink && _capsule != null)
+        {
+            getupSize = _capsule.size;
+            getupOffset = _capsule.offset;
+        }
+        else
+        {
+            getupSize = getupColliderSize;
+            getupOffset = getupColliderOffset;
+        }
+    }
+
+    /// <summary>
+    /// Keep the foot OverlapBox centered on the standing capsule bottom.
+    /// Half the box hangs below the feet so small physics contact gaps still count as grounded.
+    /// </summary>
+    public void SyncGroundCheckToCapsule()
+    {
+        if (!_hasStandingCollider)
+            CacheCapsule();
+        if (!_hasStandingCollider)
+            return;
+
+        float bottom = _standingColliderOffset.y - _standingColliderSize.y * 0.5f;
+        if (groundCheck != null)
+            groundCheck.localPosition = new Vector3(_standingColliderOffset.x, bottom, 0f);
+
+        // Narrower than capsule (avoid wall→ground false positives); tall enough to bridge contact skin.
+        groundCheckSize = new Vector2(_standingColliderSize.x * 0.74f, 0.28f);
     }
 
     public void ApplyVisualFeetOffset(float localY)
@@ -131,14 +205,24 @@ public class PlayerController : MonoBehaviour
             run != null ? new[] { run } : null);
     }
 
-    public void SetAnimationFrames(Sprite[] idle, Sprite[] run, Sprite[] getup = null, Sprite[] jump = null)
+    public void SetAnimationFrames(
+        Sprite[] idle,
+        Sprite[] run,
+        Sprite[] getup = null,
+        Sprite[] jump = null,
+        Sprite[] idleArmed = null,
+        bool equipOathblade = false)
     {
+        _idleUnarmed = idle;
+        _idleArmed = idleArmed;
+        _hasOathblade = equipOathblade;
+
         if (animator == null)
             animator = GetComponent<PlayerSpriteAnimator>();
         if (animator == null)
             animator = gameObject.AddComponent<PlayerSpriteAnimator>();
         animator.Bind(visual);
-        animator.SetFrames(idle, run);
+        animator.SetFrames(ActiveIdleFrames(), run);
         animator.SetJumpFrames(jump);
         animator.SetGetupFrames(getup);
 
@@ -147,8 +231,48 @@ public class PlayerController : MonoBehaviour
 
         if (getup != null && getup.Length > 0 && getup[0] != null && playGetupOnStart)
             visual.sprite = getup[0];
-        else if (idle != null && idle.Length > 0 && idle[0] != null)
-            visual.sprite = idle[0];
+        else
+        {
+            var idleNow = ActiveIdleFrames();
+            if (idleNow != null && idleNow.Length > 0 && idleNow[0] != null)
+                visual.sprite = idleNow[0];
+        }
+    }
+
+    /// <summary>Equip 残誓 and switch to armed idle when available.</summary>
+    public void EquipOathblade()
+    {
+        SetOathblade(true);
+    }
+
+    public void SetOathblade(bool equipped)
+    {
+        _hasOathblade = equipped;
+        if (animator == null)
+            animator = GetComponent<PlayerSpriteAnimator>();
+        if (animator == null)
+            return;
+
+        animator.SetIdleFrames(ActiveIdleFrames());
+    }
+
+    [ContextMenu("Equip Oathblade (preview)")]
+    void ContextEquipOathblade()
+    {
+        EquipOathblade();
+    }
+
+    [ContextMenu("Unequip Oathblade (preview)")]
+    void ContextUnequipOathblade()
+    {
+        SetOathblade(false);
+    }
+
+    Sprite[] ActiveIdleFrames()
+    {
+        if (_hasOathblade && _idleArmed != null && _idleArmed.Length > 0 && _idleArmed[0] != null)
+            return _idleArmed;
+        return _idleUnarmed;
     }
 
     /// <summary>Play one-shot getup and lock move/jump until it finishes.</summary>
@@ -207,6 +331,7 @@ public class PlayerController : MonoBehaviour
 
         CacheCapsule();
         ApplyVisualFeetOffset(visualFeetOffset);
+        SyncGroundCheckToCapsule();
         BindInput();
         _spawnPosition = transform.position;
     }
@@ -283,7 +408,7 @@ public class PlayerController : MonoBehaviour
 
             animator?.SetLocomotion(IsGrounded, false, _rb != null ? _rb.linearVelocity.y : 0f);
             if (transform.position.y < -12f)
-                Respawn();
+                HandleFatalFall();
             return;
         }
 
@@ -302,7 +427,7 @@ public class PlayerController : MonoBehaviour
         UpdateFacingAndSprite();
 
         if (transform.position.y < -12f)
-            Respawn();
+            HandleFatalFall();
     }
 
     void FixedUpdate()
@@ -342,8 +467,23 @@ public class PlayerController : MonoBehaviour
 
     void ProbeGround()
     {
-        var origin = groundCheck != null ? groundCheck.position : transform.position;
-        IsGrounded = Physics2D.OverlapBox(origin, groundCheckSize, 0f, GameLayers.GroundMask);
+        CacheCapsule();
+
+        Vector2 origin;
+        Vector2 size = groundCheckSize;
+        if (_capsule != null)
+        {
+            // Live capsule (standing or getup) — do not trust a stale GroundCheck transform alone.
+            float bottom = _capsule.offset.y - _capsule.size.y * 0.5f;
+            origin = (Vector2)transform.position + new Vector2(_capsule.offset.x, bottom);
+            size = new Vector2(_capsule.size.x * 0.74f, Mathf.Max(0.28f, groundCheckSize.y));
+        }
+        else
+        {
+            origin = groundCheck != null ? (Vector2)groundCheck.position : (Vector2)transform.position;
+        }
+
+        IsGrounded = Physics2D.OverlapBox(origin, size, 0f, GameLayers.GroundMask);
 
         if (IsGrounded)
             _coyote = coyoteTime;
@@ -371,6 +511,18 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void ApplyHitKnockback(Vector2 velocity)
+    {
+        if (_rb == null || IsControlLocked)
+            return;
+
+        _rb.bodyType = RigidbodyType2D.Dynamic;
+        _rb.linearVelocity = velocity;
+        _coyote = 0f;
+        _jumpBuffer = 0f;
+        _cutJump = false;
+    }
+
     public void Respawn()
     {
         ApplyGetupCollider(false);
@@ -378,9 +530,21 @@ public class PlayerController : MonoBehaviour
         _wasControlLocked = false;
         _rb.linearVelocity = Vector2.zero;
         transform.position = _spawnPosition;
+        if (_rb != null)
+            _rb.position = _spawnPosition;
         _moveInput = 0f;
         _jumpBuffer = 0f;
         _cutJump = false;
+        SnapToGround();
+    }
+
+    void HandleFatalFall()
+    {
+        var health = GetComponent<PlayerHealth>();
+        if (health != null)
+            health.Kill();
+        else
+            Respawn();
     }
 
     void CacheCapsule()
@@ -451,8 +615,21 @@ public class PlayerController : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        var origin = groundCheck != null ? groundCheck.position : transform.position;
+        CacheCapsule();
+        Vector2 origin;
+        Vector2 size = groundCheckSize;
+        if (_capsule != null)
+        {
+            float bottom = _capsule.offset.y - _capsule.size.y * 0.5f;
+            origin = (Vector2)transform.position + new Vector2(_capsule.offset.x, bottom);
+            size = new Vector2(_capsule.size.x * 0.74f, Mathf.Max(0.28f, groundCheckSize.y));
+        }
+        else
+        {
+            origin = groundCheck != null ? (Vector2)groundCheck.position : (Vector2)transform.position;
+        }
+
         Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(origin, groundCheckSize);
+        Gizmos.DrawWireCube(origin, size);
     }
 }
