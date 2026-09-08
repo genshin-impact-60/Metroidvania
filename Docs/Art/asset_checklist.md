@@ -120,11 +120,13 @@
 
 目录建议：`Assets/Art/Characters/Animations/`
 
+尺度、透明底、PPU、脚底 pivot、验收清单见 **[protagonist_sprite_spec.md](./protagonist_sprite_spec.md)**（对齐 idle 站立 ~872px，勿再按画布框随意缩小）。
+
 | 文件 | 内容 | 构图要求 |
 |------|------|----------|
 | `protagonist_cursed_pilgrim_chibi_idle.png` | 呼吸待机 4～6 帧（或单帧+注明可后补） | 与现有 chibi 同比例、同朝向（建议统一面朝右） |
-| `protagonist_cursed_pilgrim_chibi_run.png` | 已有则可复查；补齐循环帧 | 脚底对齐基准线 |
-| `protagonist_cursed_pilgrim_chibi_jump.png` | 起跳 / 升空 / 顶点 / 下落 | |
+| `protagonist_cursed_pilgrim_chibi_run.png` | 已有则可复查；补齐循环帧 | 脚底对齐基准线；尺度锁 idle |
+| `protagonist_cursed_pilgrim_chibi_jump.png` | 起跳 / 升空 / 顶点 / 下落 | 头宽锁 idle；空中也脚踩底线 |
 | `protagonist_cursed_pilgrim_chibi_attack.png` | 近战 3～5 帧（挥刃或刺击） | 攻击帧带简易刀光也可另出 VFX |
 | `protagonist_cursed_pilgrim_chibi_hurt.png` | 受击闪白姿态 | |
 | `protagonist_cursed_pilgrim_chibi_death.png` | 倒地 / 消散 2～4 帧 | |

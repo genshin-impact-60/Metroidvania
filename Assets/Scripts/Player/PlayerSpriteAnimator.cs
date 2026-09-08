@@ -5,13 +5,18 @@ public class PlayerSpriteAnimator : MonoBehaviour
     [SerializeField] SpriteRenderer target;
     [SerializeField] Sprite[] idleFrames;
     [SerializeField] Sprite[] runFrames;
+    [SerializeField] Sprite[] jumpFrames;
     [SerializeField] Sprite[] getupFrames;
     [SerializeField] float idleFps = 3f;
     [SerializeField] float runFps = 12f;
     [SerializeField] float getupFps = 6f;
     [SerializeField] float runEnterDelay = 0.05f;
     [SerializeField] float runExitDelay = 0.12f;
-    [SerializeField] [Tooltip("Run-sheet frame held while airborne (0-based). For an 8-frame cycle, mid-stride hang is usually 3.")]
+    [SerializeField] [Tooltip("Brief crouch (jump_0) held right after leaving the ground.")]
+    float jumpTakeoffHold = 0.06f;
+    [SerializeField] [Tooltip("|vy| below this uses the apex frame.")]
+    float jumpApexThreshold = 2.2f;
+    [SerializeField] [Tooltip("Run-sheet frame held while airborne when no jump sheet is set (0-based).")]
     int airHangFrame = 3;
 
     enum Pose
@@ -27,6 +32,8 @@ public class PlayerSpriteAnimator : MonoBehaviour
     float _frameTime;
     float _runHold;
     float _idleHold;
+    float _airTime;
+    float _verticalVelocity;
     bool _grounded = true;
     bool _wasGrounded = true;
     bool _moving;
@@ -37,6 +44,8 @@ public class PlayerSpriteAnimator : MonoBehaviour
     }
 
     public bool HasRunCycle => runFrames != null && runFrames.Length > 1;
+
+    public bool HasJump => Has(jumpFrames);
 
     public bool HasGetup => Has(getupFrames);
 
@@ -68,6 +77,11 @@ public class PlayerSpriteAnimator : MonoBehaviour
         }
     }
 
+    public void SetJumpFrames(Sprite[] jump)
+    {
+        jumpFrames = jump;
+    }
+
     public void SetGetupFrames(Sprite[] getup)
     {
         getupFrames = getup;
@@ -88,12 +102,13 @@ public class PlayerSpriteAnimator : MonoBehaviour
         return true;
     }
 
-    public void SetLocomotion(bool grounded, bool moving)
+    public void SetLocomotion(bool grounded, bool moving, float verticalVelocity = 0f)
     {
         if (_pose == Pose.Getup)
             return;
         _grounded = grounded;
         _moving = moving;
+        _verticalVelocity = verticalVelocity;
     }
 
     void Update()
@@ -111,7 +126,7 @@ public class PlayerSpriteAnimator : MonoBehaviour
             _wasGrounded = false;
             _runHold = 0f;
             _idleHold = 0f;
-            Advance();
+            AdvanceAir();
             return;
         }
 
@@ -141,8 +156,20 @@ public class PlayerSpriteAnimator : MonoBehaviour
 
     void EnterAir()
     {
-        // Moving / mid-run jump: freeze a hang frame from the run sheet.
-        // Standing jump from idle: keep idle (breathing continues).
+        _airTime = 0f;
+
+        // Dedicated jump sheet: crouch → rise → apex → fall by vertical velocity.
+        if (Has(jumpFrames))
+        {
+            _pose = Pose.Air;
+            _frame = ResolveJumpFrame(true);
+            _frameTime = 0f;
+            Apply();
+            return;
+        }
+
+        // Fallback: moving / mid-run jump freezes a hang frame from the run sheet.
+        // Standing jump from idle keeps idle (breathing continues).
         if (Has(runFrames) && (_pose == Pose.Run || _moving))
         {
             _pose = Pose.Air;
@@ -152,10 +179,64 @@ public class PlayerSpriteAnimator : MonoBehaviour
         }
     }
 
+    void AdvanceAir()
+    {
+        _airTime += Time.deltaTime;
+
+        if (_pose != Pose.Air)
+            return;
+
+        if (!Has(jumpFrames))
+            return;
+
+        int next = ResolveJumpFrame(false);
+        if (next == _frame)
+            return;
+
+        _frame = next;
+        Apply();
+    }
+
+    int ResolveJumpFrame(bool justLeftGround)
+    {
+        int count = jumpFrames.Length;
+        if (count <= 0)
+            return 0;
+        if (count == 1)
+            return 0;
+
+        // jump_0 crouch / anticipate — brief takeoff hold.
+        if (justLeftGround || _airTime < jumpTakeoffHold)
+            return 0;
+
+        // Prefer rise / apex / fall when at least 4 frames; otherwise map what we have.
+        if (count >= 4)
+        {
+            if (_verticalVelocity > jumpApexThreshold)
+                return 1;
+            if (_verticalVelocity < -jumpApexThreshold)
+                return 3;
+            return 2;
+        }
+
+        if (count == 3)
+        {
+            if (_verticalVelocity > jumpApexThreshold)
+                return 0;
+            if (_verticalVelocity < -jumpApexThreshold)
+                return 2;
+            return 1;
+        }
+
+        // 2 frames: up / down
+        return _verticalVelocity >= 0f ? 0 : 1;
+    }
+
     void Land()
     {
         _runHold = 0f;
         _idleHold = 0f;
+        _airTime = 0f;
         if (_moving && Has(runFrames))
         {
             if (_pose != Pose.Run)
@@ -214,7 +295,7 @@ public class PlayerSpriteAnimator : MonoBehaviour
 
     void FinishGetup()
     {
-        // Land on idle without re-Apply flash if last getup cell already is idle_0.
+        // Cycle already settles on idle_0; Apply keeps the same cell (no size flash).
         _pose = Pose.Idle;
         _frame = 0;
         _frameTime = 0f;
@@ -250,6 +331,8 @@ public class PlayerSpriteAnimator : MonoBehaviour
     {
         if (_pose == Pose.Getup && Has(getupFrames))
             return getupFrames;
+        if (_pose == Pose.Air && Has(jumpFrames))
+            return jumpFrames;
         if ((_pose == Pose.Run || _pose == Pose.Air) && Has(runFrames))
             return runFrames;
         return idleFrames;

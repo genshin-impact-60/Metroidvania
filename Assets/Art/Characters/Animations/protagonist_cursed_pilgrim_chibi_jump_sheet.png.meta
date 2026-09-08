@@ -1,28 +1,19 @@
 fileFormatVersion: 2
-guid: 99f4c365ad914a94784fbc6d3718257f
+guid: 4bcfc325ece4461c8496e785601edef5
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7102846193847512001
-    second: getup_0
+      213: 7129485612038471921
+    second: jump_0
   - first:
-      213: 7102846193847512002
-    second: getup_1
+      213: -3847562910384756123
+    second: jump_1
   - first:
-      213: 7102846193847512003
-    second: getup_2
+      213: 5567382910456728190
+    second: jump_2
   - first:
-      213: 7102846193847512004
-    second: getup_3
-  - first:
-      213: 7102846193847512005
-    second: getup_4
-  - first:
-      213: 7102846193847512006
-    second: getup_5
-  - first:
-      213: 7102846193847512007
-    second: getup_6
+      213: -1928374655647382910
+    second: jump_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -101,30 +92,17 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Standalone
-    maxTextureSize: 8192
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 0
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: getup_0
+      name: jump_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 650
-        height: 900
+        width: 750
+        height: 896
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -133,20 +111,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a1b2c3d4e5f607180000000000000001
-      internalID: 7102846193847512001
+      spriteID: 20e797c4c4de400cb21a1791036a2595
+      internalID: 7129485612038471921
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: getup_1
+      name: jump_1
       rect:
         serializedVersion: 2
-        x: 650
+        x: 750
         y: 0
-        width: 650
-        height: 900
+        width: 750
+        height: 896
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -155,20 +133,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a1b2c3d4e5f607180000000000000002
-      internalID: 7102846193847512002
+      spriteID: 0a2b808e092c4661893eaff7ce601858
+      internalID: -3847562910384756123
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: getup_2
+      name: jump_2
       rect:
         serializedVersion: 2
-        x: 1300
+        x: 1500
         y: 0
-        width: 650
-        height: 900
+        width: 750
+        height: 896
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -177,20 +155,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a1b2c3d4e5f607180000000000000003
-      internalID: 7102846193847512003
+      spriteID: 0c70aee3c734401c8996b436595e6bfd
+      internalID: 5567382910456728190
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: getup_3
+      name: jump_3
       rect:
         serializedVersion: 2
-        x: 1950
+        x: 2250
         y: 0
-        width: 650
-        height: 900
+        width: 750
+        height: 896
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -199,74 +177,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a1b2c3d4e5f607180000000000000004
-      internalID: 7102846193847512004
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: getup_4
-      rect:
-        serializedVersion: 2
-        x: 2600
-        y: 0
-        width: 650
-        height: 900
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a1b2c3d4e5f607180000000000000005
-      internalID: 7102846193847512005
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: getup_5
-      rect:
-        serializedVersion: 2
-        x: 3250
-        y: 0
-        width: 650
-        height: 900
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a1b2c3d4e5f607180000000000000006
-      internalID: 7102846193847512006
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: getup_6
-      rect:
-        serializedVersion: 2
-        x: 3900
-        y: 0
-        width: 650
-        height: 900
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: a1b2c3d4e5f607180000000000000007
-      internalID: 7102846193847512007
+      spriteID: 3b6ab08a3036483485010cc3768537cd
+      internalID: -1928374655647382910
       vertices: []
       indices: 
       edges: []
@@ -285,13 +197,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      getup_0: 7102846193847512001
-      getup_1: 7102846193847512002
-      getup_2: 7102846193847512003
-      getup_3: 7102846193847512004
-      getup_4: 7102846193847512005
-      getup_5: 7102846193847512006
-      getup_6: 7102846193847512007
+      jump_0: 7129485612038471921
+      jump_1: -3847562910384756123
+      jump_2: 5567382910456728190
+      jump_3: -1928374655647382910
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,0 +1,29 @@
+---
+description: >-
+  Protagonist/character animation sprite sheets: generate on chroma green,
+  rembg cutout to RGBA, align feet, match idle scale. Use when generating,
+  repairing, or re-keying character sprite sheets under Assets/Art/Characters.
+globs: Assets/Art/Characters/**/*,Docs/Art/**
+alwaysApply: false
+---
+
+# Character sprite sheet pipeline
+
+When generating or fixing **character animation sheets** (idle / run / jump / getup / attack / …):
+
+## Do not
+
+- Do **not** ask the image model for a transparent/alpha background (Cursor gen is RGB-only; “transparent” becomes white/cream and eats white cloak pixels).
+- Do **not** generate on black or cream/white backgrounds for this character (black hair / white feathered cloak get keyed away).
+- Do **not** ship chroma-colored fringing into the Unity asset.
+
+## Pipeline (required)
+
+1. **Generate** the sheet on solid chroma green `#00FF00` (flat, no gradient/shadow/floor). Keep a `*_sheet_green.png` source if useful.
+2. **Cut out per frame** with Python `rembg` (`birefnet-general-lite` preferred; avoid `isnet-anime` for this chibi sheet — it hollows frames). Pad each cell with green before `remove()`.
+3. **Despill** residual green on edges after rembg.
+4. **Assemble** RGBA sheet: feet on one baseline; standing/apex content height within **±5% of idle_0** (~872px). Cell size ~`650×900` (or match existing action meta).
+5. **Write** Unity asset as **RGBA transparent** `protagonist_cursed_pilgrim_chibi_{action}_sheet.png` under `Assets/Art/Characters/Animations/`. Update `.meta` sprite rects if dimensions change.
+6. **Verify** cream + dark composites (no green fringe, no white holes in cloak/hair).
+
+Specs: `Docs/Art/protagonist_sprite_spec.md`. Env props stay black-bg per checklist — this rule is for **character** sheets only.

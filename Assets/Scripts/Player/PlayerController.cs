@@ -131,7 +131,7 @@ public class PlayerController : MonoBehaviour
             run != null ? new[] { run } : null);
     }
 
-    public void SetAnimationFrames(Sprite[] idle, Sprite[] run, Sprite[] getup = null)
+    public void SetAnimationFrames(Sprite[] idle, Sprite[] run, Sprite[] getup = null, Sprite[] jump = null)
     {
         if (animator == null)
             animator = GetComponent<PlayerSpriteAnimator>();
@@ -139,6 +139,7 @@ public class PlayerController : MonoBehaviour
             animator = gameObject.AddComponent<PlayerSpriteAnimator>();
         animator.Bind(visual);
         animator.SetFrames(idle, run);
+        animator.SetJumpFrames(jump);
         animator.SetGetupFrames(getup);
 
         if (visual == null)
@@ -280,7 +281,7 @@ public class PlayerController : MonoBehaviour
             if (_rb != null)
                 _rb.linearVelocity = Vector2.zero;
 
-            animator?.SetLocomotion(IsGrounded, false);
+            animator?.SetLocomotion(IsGrounded, false, _rb != null ? _rb.linearVelocity.y : 0f);
             if (transform.position.y < -12f)
                 Respawn();
             return;
@@ -365,7 +366,8 @@ public class PlayerController : MonoBehaviour
 
             if (animator == null)
                 animator = GetComponent<PlayerSpriteAnimator>();
-            animator?.SetLocomotion(IsGrounded, Mathf.Abs(_moveInput) > 0.05f);
+            float vy = _rb != null ? _rb.linearVelocity.y : 0f;
+            animator?.SetLocomotion(IsGrounded, Mathf.Abs(_moveInput) > 0.05f, vy);
         }
     }
 
