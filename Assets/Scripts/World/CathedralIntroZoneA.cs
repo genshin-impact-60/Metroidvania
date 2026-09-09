@@ -14,11 +14,6 @@ public class CathedralIntroZoneA : MonoBehaviour
 {
     const string IdlePath = "Assets/Art/Characters/protagonist_cursed_pilgrim_chibi.png";
     const string RunPath = "Assets/Art/Characters/protagonist_cursed_pilgrim_chibi_run.png";
-    const string IdleSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_idle_sheet.png";
-    const string IdleOathbladeSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_idle_oathblade_sheet.png";
-    const string RunSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_run_sheet.png";
-    const string JumpSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_jump_sheet.png";
-    const string GetupSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_getup_sheet.png";
     const string TileDir = "Assets/Art/Environment/Tilesets/cathedral/";
     const string FloorTilePath = TileDir + "map_tileset_cathedral_1.png";
     const string FillTilePath = TileDir + "map_tileset_cathedral_0.png";
@@ -26,7 +21,11 @@ public class CathedralIntroZoneA : MonoBehaviour
     const string WallEndTilePath = TileDir + "map_tileset_cathedral_4.png";
     const string ColumnTilePath = TileDir + "map_tileset_cathedral_5.png";
     const string LedgeTilePath = TileDir + "map_tileset_cathedral_9.png";
-    const string PropsPath = "Assets/Art/Environment/Props/map_props_cathedral.png";
+    const string PropDir = "Assets/Art/Environment/Props/cathedral/";
+    const string PropAngelPath = PropDir + "prop_cathedral_angel.png";
+    const string PropLanternPath = PropDir + "prop_cathedral_hanging_lantern.png";
+    const string PropFencePath = PropDir + "prop_cathedral_iron_fence.png";
+    const string PropPewPath = PropDir + "prop_cathedral_broken_pew.png";
     const string BgPath = "Assets/Art/Environment/Backgrounds/map_bg_cathedral.png";
     const string HolyWaterDecalPath = "Assets/Art/Environment/Hazards/map_hazard_holywater_floor_decal.png";
     const string HolyWaterFlatPath = "Assets/Art/Environment/Hazards/map_hazard_holywater_cathedral_flat.png";
@@ -116,10 +115,10 @@ public class CathedralIntroZoneA : MonoBehaviour
         var column = LoadSprite(ColumnTilePath, "map_tileset_cathedral_5") ?? floor;
 
         var bg = LoadSprite(BgPath, "map_bg_cathedral_0");
-        var propGate = LoadSprite(PropsPath, "map_props_cathedral_3");
-        var propAngel = LoadSprite(PropsPath, "map_props_cathedral_0");
-        var propBanner = LoadSprite(PropsPath, "map_props_cathedral_6");
-        var propRuin = LoadSprite(PropsPath, "map_props_cathedral_4");
+        var propGate = LoadSprite(PropLanternPath, "prop_cathedral_hanging_lantern");
+        var propAngel = LoadSprite(PropAngelPath, "prop_cathedral_angel");
+        var propBanner = LoadSprite(PropFencePath, "prop_cathedral_iron_fence");
+        var propRuin = LoadSprite(PropPewPath, "prop_cathedral_broken_pew");
 
         var sprites = new System.Collections.Generic.Dictionary<string, Sprite>(64);
         void Register(Sprite s)
@@ -140,11 +139,14 @@ public class CathedralIntroZoneA : MonoBehaviour
         Register(propBanner);
         Register(propRuin);
 
-        var idleFrames = BuildIdleCycle(LoadSheet(IdleSheetPath));
-        var idleArmedFrames = BuildIdleCycle(LoadSheet(IdleOathbladeSheetPath));
-        var runFrames = LoadSheet(RunSheetPath);
-        var jumpFrames = LoadSheet(JumpSheetPath);
-        var getupFrames = BuildGetupCycle(LoadSheet(GetupSheetPath), idleFrames);
+        var idleFrames = PlayerAnimationLoader.BuildIdleCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.IdleDir));
+        var idleArmedFrames = PlayerAnimationLoader.BuildIdleCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.IdleOathbladeDir));
+        var runFrames = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.RunDir);
+        var jumpFrames = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.JumpDir);
+        var getupFrames = PlayerAnimationLoader.BuildGetupCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.GetupDir), idleFrames);
         if (idleFrames.Length == 0)
         {
             var idle = LoadSprite(IdlePath, "protagonist_cursed_pilgrim_chibi_0")
@@ -582,11 +584,14 @@ public class CathedralIntroZoneA : MonoBehaviour
 
     void RefreshPlayerAnimation(PlayerController controller)
     {
-        var idleFrames = BuildIdleCycle(LoadSheet(IdleSheetPath));
-        var idleArmedFrames = BuildIdleCycle(LoadSheet(IdleOathbladeSheetPath));
-        var runFrames = LoadSheet(RunSheetPath);
-        var jumpFrames = LoadSheet(JumpSheetPath);
-        var getupFrames = BuildGetupCycle(LoadSheet(GetupSheetPath), idleFrames);
+        var idleFrames = PlayerAnimationLoader.BuildIdleCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.IdleDir));
+        var idleArmedFrames = PlayerAnimationLoader.BuildIdleCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.IdleOathbladeDir));
+        var runFrames = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.RunDir);
+        var jumpFrames = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.JumpDir);
+        var getupFrames = PlayerAnimationLoader.BuildGetupCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.GetupDir), idleFrames);
         if (idleFrames.Length == 0 && runFrames.Length == 0 && getupFrames.Length == 0 && jumpFrames.Length == 0)
             return;
         if (runFrames.Length == 0)
@@ -631,8 +636,24 @@ public class CathedralIntroZoneA : MonoBehaviour
             standingOffset: standingOffset,
             getupSize: getupSize,
             getupOffset: getupOffset);
+        ApplyVisualPresentationScale(controller);
         if (Application.isPlaying)
             controller.SnapToGround();
+    }
+
+    const float PlayerVisualScale = 0.62f;
+
+    static void ApplyVisualPresentationScale(PlayerController controller)
+    {
+        if (controller == null)
+            return;
+        var sr = controller.GetComponentInChildren<SpriteRenderer>();
+        if (sr == null)
+            return;
+        float sign = Mathf.Sign(sr.transform.localScale.x);
+        if (sign == 0f)
+            sign = 1f;
+        sr.transform.localScale = new Vector3(PlayerVisualScale * sign, PlayerVisualScale, PlayerVisualScale);
     }
 
     static void DestroySafe(UnityEngine.Object obj)
@@ -652,11 +673,15 @@ public class CathedralIntroZoneA : MonoBehaviour
             return;
 
         cam.orthographic = true;
-        cam.orthographicSize = 7f;
+        cam.orthographicSize = 4.5f;
         cam.backgroundColor = new Color(0.05f, 0.05f, 0.07f, 1f);
         cam.clearFlags = CameraClearFlags.SolidColor;
         if (cam.transform.position.z > -5f)
             cam.transform.position = new Vector3(-3f, 2.5f, -10f);
+
+        var follow = cam.GetComponent<CameraFollow>();
+        if (follow != null)
+            follow.SetOrthoSize(4.5f);
     }
 
     PlayerController CreatePlayer(
@@ -697,7 +722,7 @@ public class CathedralIntroZoneA : MonoBehaviour
         var visual = new GameObject("Visual");
         visual.transform.SetParent(root.transform, false);
         visual.transform.localPosition = new Vector3(0f, -0.05f, 0f);
-        visual.transform.localScale = Vector3.one * 0.53f;
+        visual.transform.localScale = Vector3.one * PlayerVisualScale;
 
         var sr = visual.AddComponent<SpriteRenderer>();
         var first = getupFrames != null && getupFrames.Length > 0 && getupFrames[0] != null
@@ -825,108 +850,6 @@ public class CathedralIntroZoneA : MonoBehaviour
 
         if (_spriteMaterial != null)
             renderer.sharedMaterial = _spriteMaterial;
-    }
-
-    static Sprite[] LoadSheet(string assetPath)
-    {
-        var frames = new List<Sprite>();
-#if UNITY_EDITOR
-        foreach (var asset in UnityEditor.AssetDatabase.LoadAllAssetsAtPath(assetPath))
-        {
-            if (asset is Sprite sprite)
-                frames.Add(sprite);
-        }
-
-        frames.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
-#endif
-        return frames.ToArray();
-    }
-
-    static Sprite[] BuildIdleCycle(Sprite[] frames)
-    {
-        if (frames == null || frames.Length == 0)
-            return frames;
-
-        if (frames.Length >= 4 &&
-            frames[0] != null && frames[1] != null && frames[2] != null && frames[3] != null)
-        {
-            var rest = frames[0];
-            var inhale = frames[1];
-            var peak = frames[2];
-            var exhale = frames[3];
-            return new[] { rest, rest, inhale, peak, peak, exhale };
-        }
-
-        return frames;
-    }
-
-    static Sprite[] BuildGetupCycle(Sprite[] frames, Sprite[] idleFrames)
-    {
-        if (frames == null || frames.Length == 0)
-            return frames;
-
-        Sprite idle = null;
-        if (idleFrames != null && idleFrames.Length > 0)
-            idle = idleFrames[0];
-
-        if (frames.Length >= 7 &&
-            frames[0] != null && frames[1] != null && frames[2] != null &&
-            frames[3] != null && frames[4] != null && frames[5] != null && frames[6] != null)
-        {
-            var lie = frames[0];
-            var stir = frames[1];
-            var crawl = frames[2];
-            var kneel = frames[3];
-            var half = frames[4];
-            var mid = frames[5];
-            var stand = frames[6];
-            var settle = idle != null ? idle : stand;
-            return new[]
-            {
-                lie, lie,
-                stir, stir,
-                crawl, crawl,
-                kneel, kneel,
-                half, half,
-                mid, mid,
-                stand, stand,
-                settle, settle
-            };
-        }
-
-        if (frames.Length >= 6 &&
-            frames[0] != null && frames[1] != null && frames[2] != null &&
-            frames[3] != null && frames[4] != null && frames[5] != null)
-        {
-            var lie = frames[0];
-            var stir = frames[1];
-            var crawl = frames[2];
-            var kneel = frames[3];
-            var rise = frames[4];
-            var stand = frames[5];
-            var settle = idle != null ? idle : stand;
-            return new[]
-            {
-                lie, lie,
-                stir, stir,
-                crawl, crawl,
-                kneel, kneel,
-                rise, rise,
-                stand, stand,
-                settle, settle
-            };
-        }
-
-        if (idle != null)
-        {
-            var withSettle = new Sprite[frames.Length + 2];
-            frames.CopyTo(withSettle, 0);
-            withSettle[frames.Length] = idle;
-            withSettle[frames.Length + 1] = idle;
-            return withSettle;
-        }
-
-        return frames;
     }
 
     static Sprite LoadSprite(string assetPath, string spriteName)

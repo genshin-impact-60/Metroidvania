@@ -1,10 +1,9 @@
-"""Rebuild idle sheet so the head breathes with the body.
+"""Rebuild idle frames so the head breathes with the body.
 
-Source sheets often only animate cloak/torso. This composites a soft vertical
+Source frames often only animate cloak/torso. This composites a soft vertical
 head bob onto rest + sway poses so the neck no longer looks welded in place.
 
-Safe to re-run on an already-fixed sheet: rest is cell 0, sway body is recovered
-from the peak cell (or the last cell on a raw sheet).
+Safe to re-run: rest is idle_0, sway body is recovered from a later frame.
 """
 
 from pathlib import Path
@@ -12,19 +11,24 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-SHEET = Path(r"D:\game\Metroidvania\Assets\Art\Characters\Animations\protagonist_cursed_pilgrim_chibi_idle_sheet.png")
-OUT = SHEET
+IDLE_DIR = Path(r"D:\game\Metroidvania\Assets\Art\Characters\Animations\idle")
 
-# Head / shoulder blend band (source sheet coordinates).
+# Head / shoulder blend band (frame coordinates).
 SPLIT_Y = 355
 FEATHER = 30
 
 
-def load_cells(path: Path, n: int = 4):
-    sheet = Image.open(path).convert("RGBA")
-    w, h = sheet.size
-    cw = w // n
-    cells = [np.array(sheet.crop((i * cw, 0, (i + 1) * cw, h))) for i in range(n)]
+def load_cells(folder: Path, n: int = 4):
+    cells = []
+    cw = h = None
+    for i in range(n):
+        path = folder / f"idle_{i}.png"
+        if not path.exists():
+            raise FileNotFoundError(path)
+        arr = np.array(Image.open(path).convert("RGBA"))
+        if cw is None:
+            h, cw = arr.shape[0], arr.shape[1]
+        cells.append(arr)
     return cells, cw, h
 
 
@@ -90,15 +94,8 @@ def resolve_sway(cells, rest: np.ndarray) -> np.ndarray:
     return with_head_bob(best, rest, 0)
 
 
-def pack_cells(cells, cw, h) -> Image.Image:
-    sheet = Image.new("RGBA", (cw * len(cells), h), (0, 0, 0, 0))
-    for i, cell in enumerate(cells):
-        sheet.paste(Image.fromarray(cell, "RGBA"), (i * cw, 0))
-    return sheet
-
-
-def apply_head_bob(sheet_path: Path = SHEET, out_path: Path = OUT) -> Path:
-    cells, cw, h = load_cells(sheet_path)
+def apply_head_bob(folder: Path = IDLE_DIR) -> Path:
+    cells, cw, h = load_cells(folder)
     rest = cells[0]
     sway = resolve_sway(cells, rest)
 
@@ -109,11 +106,13 @@ def apply_head_bob(sheet_path: Path = SHEET, out_path: Path = OUT) -> Path:
         with_head_bob(rest, rest, 2),
     ]
 
-    out = pack_cells(frames, cw, h)
-    out.save(out_path, "PNG")
-    print(f"wrote {out_path.name}: {out.size[0]}x{out.size[1]} cells={len(frames)} {cw}x{h}")
+    for i, frame in enumerate(frames):
+        out = folder / f"idle_{i}.png"
+        Image.fromarray(frame, "RGBA").save(out, "PNG")
+
+    print(f"wrote {folder}: cells={len(frames)} {cw}x{h}")
     print("poses: rest, inhale(+3), peak sway(+5), exhale(+2)")
-    return out_path
+    return folder
 
 
 def main():

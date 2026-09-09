@@ -152,13 +152,13 @@
 | SV2 | 存档祭台 | C→D | 同上 | 拾剑后安检点 | ⏸ 后置 |
 | DR1 | 出口拱门 | D | `door_basic_open` 或无脚本门洞 | 进中殿 / 确认房 | ❌ |
 | FX1 | 假门或封墙 | A 左 / 上层 | props 铁栅/砖封 | 暗示后续路线 | ✅ 左封门；上层后补 |
-| PR* | 跪天使、褪红旗、碎柱 | 各段 | `map_props_cathedral` | 纯装饰，不挡主路 | ✅ A 段已摆 |
+| PR* | 跪天使、褪红旗、碎柱 | 各段 | `Props/cathedral/` | 纯装饰，不挡主路 | ✅ A 段已摆 |
 
 环境资源目录（重组后）：
 
 - 背景：`Assets/Art/Environment/Backgrounds/`
 - 地块：`Assets/Art/Environment/Tilesets/`
-- Props：`Assets/Art/Environment/Props/`
+- Props：`Assets/Art/Environment/Props/{cathedral,cavern,clocktower,crypt,forest}/`
 - 危险：`Assets/Art/Environment/Hazards/`
 - 交互：`Assets/Art/Environment/Interact/`
 

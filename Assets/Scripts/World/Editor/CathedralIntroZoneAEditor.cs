@@ -350,7 +350,7 @@ public class CathedralIntroZoneAEditor : Editor
             return "ceiling";
         if (goName.StartsWith("BG_") || spriteName.Contains("map_bg_"))
             return "bg";
-        if (bucket == "Decor" || spriteName.StartsWith("map_props_"))
+        if (bucket == "Decor" || spriteName.StartsWith("map_props_") || spriteName.StartsWith("prop_"))
             return "decor";
         if (spriteName.Contains("cathedral_4") || spriteName.Contains("cathedral_5"))
             return "wall";

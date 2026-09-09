@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteAlways]
@@ -7,11 +6,6 @@ public class StepAPlayground : MonoBehaviour
 {
     const string IdlePath = "Assets/Art/Characters/protagonist_cursed_pilgrim_chibi.png";
     const string RunPath = "Assets/Art/Characters/protagonist_cursed_pilgrim_chibi_run.png";
-    const string IdleSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_idle_sheet.png";
-    const string IdleOathbladeSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_idle_oathblade_sheet.png";
-    const string RunSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_run_sheet.png";
-    const string JumpSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_jump_sheet.png";
-    const string GetupSheetPath = "Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_getup_sheet.png";
     const string TileDir = "Assets/Art/Environment/Tilesets/cathedral/";
     const string FloorTilePath = TileDir + "map_tileset_cathedral_1.png";
     const string CrackedTilePath = TileDir + "map_tileset_cathedral_2.png";
@@ -57,11 +51,13 @@ public class StepAPlayground : MonoBehaviour
         var ledge = LoadSprite(LedgeTilePath, "map_tileset_cathedral_9");
         var cracked = LoadSprite(CrackedTilePath, "map_tileset_cathedral_2");
 
-        var idleFrames = BuildIdleCycle(LoadSheet(IdleSheetPath));
-        var idleArmedFrames = BuildIdleCycle(LoadSheet(IdleOathbladeSheetPath));
-        var runFrames = LoadSheet(RunSheetPath);
-        var jumpFrames = LoadSheet(JumpSheetPath);
-        var getupRaw = LoadSheet(GetupSheetPath);
+        var idleFrames = PlayerAnimationLoader.BuildIdleCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.IdleDir));
+        var idleArmedFrames = PlayerAnimationLoader.BuildIdleCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.IdleOathbladeDir));
+        var runFrames = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.RunDir);
+        var jumpFrames = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.JumpDir);
+        var getupRaw = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.GetupDir);
         if (idle == null)
             idle = MakeSolidSprite(new Color(0.9f, 0.9f, 0.92f), 128, 256);
         if (run == null)
@@ -70,7 +66,7 @@ public class StepAPlayground : MonoBehaviour
             idleFrames = new[] { idle };
         if (runFrames.Length == 0)
             runFrames = new[] { run };
-        var getupFrames = BuildGetupCycle(getupRaw, idleFrames);
+        var getupFrames = PlayerAnimationLoader.BuildGetupCycle(getupRaw, idleFrames);
         if (floor == null)
             floor = MakeSolidSprite(new Color(0.28f, 0.29f, 0.32f), 256, 64);
         if (ledge == null)
@@ -125,12 +121,14 @@ public class StepAPlayground : MonoBehaviour
 
     void RefreshPlayerAnimation(PlayerController controller)
     {
-        var idleFrames = BuildIdleCycle(LoadSheet(IdleSheetPath));
-        var idleArmedFrames = BuildIdleCycle(LoadSheet(IdleOathbladeSheetPath));
-        var runFrames = LoadSheet(RunSheetPath);
-        var jumpFrames = LoadSheet(JumpSheetPath);
-        var getupRaw = LoadSheet(GetupSheetPath);
-        var getupFrames = BuildGetupCycle(getupRaw, idleFrames);
+        var idleFrames = PlayerAnimationLoader.BuildIdleCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.IdleDir));
+        var idleArmedFrames = PlayerAnimationLoader.BuildIdleCycle(
+            PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.IdleOathbladeDir));
+        var runFrames = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.RunDir);
+        var jumpFrames = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.JumpDir);
+        var getupRaw = PlayerAnimationLoader.LoadFrames(PlayerAnimationLoader.GetupDir);
+        var getupFrames = PlayerAnimationLoader.BuildGetupCycle(getupRaw, idleFrames);
         if (idleFrames.Length == 0 && runFrames.Length == 0 && getupFrames.Length == 0 && jumpFrames.Length == 0)
             return;
         if (runFrames.Length == 0)
@@ -171,9 +169,25 @@ public class StepAPlayground : MonoBehaviour
             standingOffset: standingOffset,
             getupSize: getupSize,
             getupOffset: getupOffset);
+        ApplyVisualPresentationScale(controller);
         // Feet Y comes from PlayerController.visualFeetOffset (Inspector), not a hardcoded value.
         if (Application.isPlaying)
             controller.SnapToGround();
+    }
+
+    const float PlayerVisualScale = 0.62f;
+
+    static void ApplyVisualPresentationScale(PlayerController controller)
+    {
+        if (controller == null)
+            return;
+        var sr = controller.GetComponentInChildren<SpriteRenderer>();
+        if (sr == null)
+            return;
+        float sign = Mathf.Sign(sr.transform.localScale.x);
+        if (sign == 0f)
+            sign = 1f;
+        sr.transform.localScale = new Vector3(PlayerVisualScale * sign, PlayerVisualScale, PlayerVisualScale);
     }
 
     static ZoneALayoutSnapshot TryLoadZoneALayout()
@@ -212,11 +226,15 @@ public class StepAPlayground : MonoBehaviour
             return;
 
         cam.orthographic = true;
-        cam.orthographicSize = 7f;
+        cam.orthographicSize = 4.5f;
         cam.backgroundColor = new Color(0.06f, 0.06f, 0.08f, 1f);
         cam.clearFlags = CameraClearFlags.SolidColor;
         if (cam.transform.position.z > -5f)
             cam.transform.position = new Vector3(0f, 2f, -10f);
+
+        var follow = cam.GetComponent<CameraFollow>();
+        if (follow != null)
+            follow.SetOrthoSize(4.5f);
     }
 
     PlayerController CreatePlayer(
@@ -248,7 +266,7 @@ public class StepAPlayground : MonoBehaviour
         var visual = new GameObject("Visual");
         visual.transform.SetParent(root.transform, false);
         visual.transform.localPosition = new Vector3(0f, -0.05f, 0f);
-        visual.transform.localScale = Vector3.one * 0.53f;
+        visual.transform.localScale = Vector3.one * PlayerVisualScale;
 
         var sr = visual.AddComponent<SpriteRenderer>();
         var first = getupFrames != null && getupFrames.Length > 0 && getupFrames[0] != null
@@ -319,118 +337,6 @@ public class StepAPlayground : MonoBehaviour
 
         if (_spriteMaterial != null)
             renderer.sharedMaterial = _spriteMaterial;
-    }
-
-    static Sprite[] LoadSheet(string assetPath)
-    {
-        var frames = new List<Sprite>();
-#if UNITY_EDITOR
-        foreach (var asset in UnityEditor.AssetDatabase.LoadAllAssetsAtPath(assetPath))
-        {
-            if (asset is Sprite sprite)
-                frames.Add(sprite);
-        }
-
-        frames.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
-#endif
-        return frames.ToArray();
-    }
-
-    /// <summary>
-    /// Idle sheet: rest → inhale → peak (cloak + head) → exhale. Holds keep the breath slow.
-    /// </summary>
-    static Sprite[] BuildIdleCycle(Sprite[] frames)
-    {
-        if (frames == null || frames.Length == 0)
-            return frames;
-
-        if (frames.Length >= 4 &&
-            frames[0] != null && frames[1] != null && frames[2] != null && frames[3] != null)
-        {
-            var rest = frames[0];
-            var inhale = frames[1];
-            var peak = frames[2];
-            var exhale = frames[3];
-            return new[] { rest, rest, inhale, peak, peak, exhale };
-        }
-
-        return frames;
-    }
-
-    /// <summary>
-    /// Getup timing: readable transitions (stir/kneel ≥2 ticks), soft-land on idle so Unlock→Idle does not pop.
-    /// Preferred sheet (7): 0 lie → 1 stir → 2 crawl → 3 kneel → 4 half-rise → 5 mid-rise → 6 stand.
-    /// Legacy sheet (6): same without mid-rise.
-    /// </summary>
-    static Sprite[] BuildGetupCycle(Sprite[] frames, Sprite[] idleFrames)
-    {
-        if (frames == null || frames.Length == 0)
-            return frames;
-
-        Sprite idle = null;
-        if (idleFrames != null && idleFrames.Length > 0)
-            idle = idleFrames[0];
-
-        if (frames.Length >= 7 &&
-            frames[0] != null && frames[1] != null && frames[2] != null &&
-            frames[3] != null && frames[4] != null && frames[5] != null && frames[6] != null)
-        {
-            var lie = frames[0];
-            var stir = frames[1];
-            var crawl = frames[2];
-            var kneel = frames[3];
-            var half = frames[4];
-            var mid = frames[5];
-            var stand = frames[6];
-            var settle = idle != null ? idle : stand;
-            // Key rises held ≥2 ticks; settle on idle before FinishGetup Apply.
-            return new[]
-            {
-                lie, lie,
-                stir, stir,
-                crawl, crawl,
-                kneel, kneel,
-                half, half,
-                mid, mid,
-                stand, stand,
-                settle, settle
-            };
-        }
-
-        if (frames.Length >= 6 &&
-            frames[0] != null && frames[1] != null && frames[2] != null &&
-            frames[3] != null && frames[4] != null && frames[5] != null)
-        {
-            var lie = frames[0];
-            var stir = frames[1];
-            var crawl = frames[2];
-            var kneel = frames[3];
-            var rise = frames[4];
-            var stand = frames[5];
-            var settle = idle != null ? idle : stand;
-
-            return new[]
-            {
-                lie, lie,
-                stir, stir,
-                crawl, crawl,
-                kneel, kneel,
-                rise, rise,
-                stand, stand,
-                settle, settle
-            };
-        }
-
-        if (idle != null)
-        {
-            var withSettle = new Sprite[frames.Length + 2];
-            frames.CopyTo(withSettle, 0);
-            withSettle[frames.Length] = idle;
-            withSettle[frames.Length + 1] = idle;
-            return withSettle;
-        }
-
-        return frames;
     }
 
     static Sprite LoadSprite(string assetPath, string spriteName)

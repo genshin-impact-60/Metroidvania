@@ -1,9 +1,11 @@
+"""Pack source stills into per-frame action folders under Animations/."""
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
-from fix_idle_head_bob import apply_head_bob
+from fix_idle_head_bob import IDLE_DIR, apply_head_bob
+from install_anim_frames import write_single_sprite_meta
 
 IMG = Path(r"C:\Users\21372\.grok\sessions\D%3A%5Cgame%5CMetroidvania\01a07c34-acd8-72a0-a88c-6970db459d77\images")
 IDLE_SRC = Path(r"D:\game\Metroidvania\Assets\Art\Characters\protagonist_cursed_pilgrim_chibi.png")
@@ -12,7 +14,6 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 RUN_ORDER = ["3.jpg", "7.jpg", "8.jpg", "1.jpg", "6.jpg", "5.jpg", "9.jpg", "2.jpg"]
 IDLE_ORDER = [IDLE_SRC, IMG / "11.jpg", IDLE_SRC, IMG / "10.jpg"]
-IDLE_SHEET = OUT_DIR / "protagonist_cursed_pilgrim_chibi_idle_sheet.png"
 
 
 def key_black(im: Image.Image, thresh: int = 16) -> Image.Image:
@@ -32,7 +33,7 @@ def opaque_bbox(im: Image.Image):
     return int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1
 
 
-def pack(paths, out_name, prefix):
+def pack_frames(paths, action: str, prefix: str):
     keyed = []
     boxes = []
     for p in paths:
@@ -48,35 +49,38 @@ def pack(paths, out_name, prefix):
     cell_w += cell_w % 2
     cell_h += cell_h % 2
 
-    sheet = Image.new("RGBA", (cell_w * len(keyed), cell_h), (0, 0, 0, 0))
+    dest = OUT_DIR / action
+    dest.mkdir(parents=True, exist_ok=True)
     for i, (im, box) in enumerate(zip(keyed, boxes)):
         crop = im.crop(box)
-        x = i * cell_w + (cell_w - crop.width) // 2
+        cell = Image.new("RGBA", (cell_w, cell_h), (0, 0, 0, 0))
+        x = (cell_w - crop.width) // 2
         y = cell_h - 8 - crop.height
-        sheet.paste(crop, (x, y), crop)
+        cell.paste(crop, (x, y), crop)
+        out = dest / f"{prefix}_{i}.png"
+        cell.save(out, "PNG")
+        write_single_sprite_meta(out)
 
-    out = OUT_DIR / out_name
-    sheet.save(out, "PNG")
-    print(f"{out.name}: {sheet.size[0]}x{sheet.size[1]} cells={len(keyed)} {cell_w}x{cell_h}")
-    return out, cell_w, cell_h, len(keyed)
+    print(f"{action}/: {len(keyed)} frames {cell_w}x{cell_h}")
+    return dest, cell_w, cell_h, len(keyed)
 
 
 def main():
     run_paths = [IMG / n for n in RUN_ORDER]
     if all(p.exists() for p in run_paths):
-        pack(run_paths, "protagonist_cursed_pilgrim_chibi_run_sheet.png", "run")
+        pack_frames(run_paths, "run", "run")
     else:
         print("skip run pack: source jpgs missing")
 
     if all(Path(p).exists() for p in IDLE_ORDER):
-        pack(IDLE_ORDER, IDLE_SHEET.name, "idle")
+        pack_frames(IDLE_ORDER, "idle", "idle")
     else:
-        print("skip idle repack: source frames missing; bobbing existing sheet")
+        print("skip idle repack: source frames missing; bobbing existing idle frames")
 
-    if IDLE_SHEET.exists():
-        apply_head_bob(IDLE_SHEET, IDLE_SHEET)
+    if IDLE_DIR.exists() and (IDLE_DIR / "idle_0.png").exists():
+        apply_head_bob(IDLE_DIR)
     else:
-        raise SystemExit(f"missing idle sheet: {IDLE_SHEET}")
+        raise SystemExit(f"missing idle frames: {IDLE_DIR}")
 
 
 if __name__ == "__main__":

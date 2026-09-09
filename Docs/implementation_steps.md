@@ -27,7 +27,7 @@
 | 五区背景 | `map_bg_*.png` | 视差远景 |
 | 五区平台块 | `map_tileset_*.png` | **块状平台/墙面**，不是 16px 自动瓦片 |
 | 五区样板房间 | `map_room_sample_*.png` | 布局参考画；可当第一间的假背景 |
-| 五区装饰 | `map_props_*.png` | 纯装饰（喷泉/宝箱/拉杆等降级为氛围） |
+| 五区装饰 | `Props/{biome}/prop_*.png` | 纯装饰（喷泉/宝箱/拉杆等降级为氛围） |
 | 存档点 ×5 | `map_interact_save_*.png` | 未激活 / 已激活 两态 |
 | 陷阱 ×5 | `map_hazards_*.png` | 每区 3 种 |
 | 门 | `map_doors_common.png`、`map_doors_ability_gates.png` | 普通门/锁门/头目门 + 4 种能力门（关/开） |
@@ -179,8 +179,8 @@ Sprite Editor → Slice → **Automatic**（黑底可用）。切完立刻改名
 
 缺图的两个能力：
 
-- **墙跳**：教堂主 Boss 掉落，过场用伪圣主教立绘，地上可用金色水晶 `map_props_cathedral` 当圣物占位
-- **时间操控**：钟塔 Boss 掉落，地上可用残钟面 `map_props_clocktower`
+- **墙跳**：教堂主 Boss 掉落，过场用伪圣主教立绘，地上可用金色水晶 `Props/cathedral/prop_cathedral_crystal` 当圣物占位
+- **时间操控**：钟塔 Boss 掉落，地上可用残钟面 `Props/clocktower/prop_clocktower_clock_face`
 
 ### 2.3 能力门 `map_doors_ability_gates.png`
 
@@ -326,7 +326,7 @@ Automatic 切完后，给每块加 `BoxCollider2D`（或 Composite）。只要�
 
 ### 4.3 装饰（不参与玩法）
 
-从 `map_props_cathedral` 摆：跪天使、倒十字、残柱、吊灯、破长椅、金水晶、铁栅、垂旗。Sorting = Midground。金水晶以后可复用成墙跳圣物占位。
+从 `Props/cathedral/` 摆：跪天使、倒十字、残柱、吊灯、破长椅、金水晶、铁栅、垂旗。Sorting = Midground。金水晶以后可复用成墙跳圣物占位。
 
 ### 4.4 本间必摆的玩法物件（用第 5～7 步的 Prefab）
 

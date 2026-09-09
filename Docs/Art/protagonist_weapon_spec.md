@@ -79,7 +79,7 @@
 
 ## 4. 各动作如何画武器
 
-目录仍为：`Assets/Art/Characters/Animations/`  
+目录仍为：`Assets/Art/Characters/Animations/{action}/`（单帧 PNG）  
 角色尺度、绿幕抠图、PPU、脚底 pivot 一律遵循 **[protagonist_sprite_spec.md](./protagonist_sprite_spec.md)**。
 
 | 动作 | 武器呈现 | 要点 |
@@ -88,10 +88,10 @@
 | **attack** | **必须完整露刃** | 3～5 帧：见下节 |
 | **hurt** | 可松握或刃下垂 | 勿突然消失 |
 | **death** | 刃落地或裂纹光熄灭 | 1 帧示意即可 |
-| **冲刺（能力）** | 刃尖朝前；可另出残影 VFX | sheet 本体仍是短剑形 |
+| **冲刺（能力）** | 刃尖朝前；可另出残影 VFX | 角色帧仍是短剑形 |
 | **下砸（能力）** | 双手握柄 Overhead → 砸地 | 着地冲击环走 VFX，勿画进角色脚底像素里「垫高」 |
 
-### 4.1 Attack sheet（`..._attack_sheet.png`）
+### 4.1 Attack 帧（`Animations/attack/attack_N.png`）
 
 建议 4 帧（可 3～5）：
 
@@ -124,7 +124,7 @@
 | `vfx_oathblade_thrust_trail` | 冲刺刺痕残影 | 短直线琥珀残影 |
 | `vfx_oathblade_slam_ring` | 下砸落地环 | 琥珀冲击环，1～3 帧 |
 
-原则：角色 sheet = 实体；发光拖尾 = VFX。污光能力光晕（探索用）与刀光可同色，但造型区分（光晕是身周，刀光是刃迹）。
+原则：角色帧 = 实体；发光拖尾 = VFX。污光能力光晕（探索用）与刀光可同色，但造型区分（光晕是身周，刀光是刃迹）。
 
 ---
 
@@ -132,15 +132,15 @@
 
 | 资源 | 路径 / 名 |
 |------|-----------|
-| 持刃闲置 sheet | `Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_idle_oathblade_sheet.png`（绿幕源同名 `_green`） |
-| 攻击动作 sheet | `Assets/Art/Characters/Animations/protagonist_cursed_pilgrim_chibi_attack_sheet.png` |
+| 持刃闲置帧 | `Assets/Art/Characters/Animations/idle_oathblade/idle_oathblade_N.png` |
+| 攻击动作帧 | `Assets/Art/Characters/Animations/attack/attack_N.png` |
 | 持刃概念（RGBA） | `Assets/Art/Characters/Weapons/stained_oathblade_concept.png` |
 | 持刃概念绿幕源 | `Assets/Art/Characters/Weapons/stained_oathblade_concept_green.png` |
 | 刀光 VFX | `Assets/Art/VFX/vfx_oathblade_*.png`（或并入现有 VFX 表） |
 
-持刃概念为 **承认期** 外观与尺度锁定稿（右手持刃、刃缝琥珀、护手圣徽、柄端星钉；刃长 §2.1 **1.1～1.25 头宽**）；不进关卡动画。出 attack sheet 时锁此造型与比例。
+持刃概念为 **承认期** 外观与尺度锁定稿（右手持刃、刃缝琥珀、护手圣徽、柄端星钉；刃长 §2.1 **1.1～1.25 头宽**）；不进关卡动画。出 attack 帧时锁此造型与比例。
 
-Unity：角色 sheet 仍 PPU **256**、Pivot **Bottom**；纯武器 icon 可另定 PPU，但进关卡的持刃帧必须跟角色 sheet 同一套导入规则。
+Unity：角色帧仍 PPU **256**、Pivot **Bottom**、Sprite Mode **Single**；纯武器 icon 可另定 PPU，但进关卡的持刃帧必须跟角色同一套导入规则。
 
 ---
 

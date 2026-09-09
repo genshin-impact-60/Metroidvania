@@ -2,7 +2,7 @@
 
 `asset_checklist.md` 管「画哪些动作」；本文管「怎么画才能直接进 Unity、切换时不缩水/不跳脚」。
 
-目录：`Assets/Art/Characters/Animations/`
+目录：`Assets/Art/Characters/Animations/{action}/`（每帧一张 PNG）
 
 ---
 
@@ -10,7 +10,7 @@
 
 | 项 | 值 |
 |----|-----|
-| 基准图 | `protagonist_cursed_pilgrim_chibi_idle_sheet.png` 的站立帧 `idle_0` |
+| 基准图 | `Animations/idle/idle_0.png` |
 | 站立内容高 | 约 **872px**（刺环顶 → 脚底不透明像素） |
 | 朝向 | 统一 **面朝右**（3/4 或侧视与 idle 一致） |
 | 外观 | 头、白发缕、刺环、碎翼披风、胸甲十字、护臂护胫与 idle 一致 |
@@ -24,8 +24,8 @@
 
 参考实测（同 PPU、同 Visual scale 下）：
 
-| Sheet | 站立/典型内容高 | 相对 idle |
-|-------|-----------------|-----------|
+| 动作 | 站立/典型内容高 | 相对 idle |
+|------|-----------------|-----------|
 | idle | ~872px | 100%（基准） |
 | run | ~771px | ~88%（历史略小；新图尽量按 idle） |
 | jump（对齐后） | 升空帧 ~872px | 100% |
@@ -34,24 +34,23 @@
 
 ---
 
-## 2. Canvas / Sheet 布局
+## 2. Canvas / 单帧布局
 
-- 横排一张 sheet；帧与帧之间可留透明空隙。
-- 单帧画布建议：**宽 600～780 × 高 ~900**（idle 单格约 `614×898`）。
-- **全帧脚踩同一底线**（脚底对齐）。
+- **每帧一张 PNG**，按动作放在子目录：`Animations/{action}/{action}_N.png`。
+- 单帧画布建议：**宽 600～780 × 高 ~900**（idle 约 `614×898`）。
+- **同动作全帧脚踩同一底线**（脚底对齐）；画布尺寸尽量一致。
 - 空中动作也画在底线上：跳跃高度由游戏 Transform 负责，**不要**在画布里把角色画得「飘在格子上半」。
-- 导出：**RGBA 透明底**。环境 props 清单里的「纯黑底」不适用于主角动作 sheet；黑底进引擎会被当成实体像素。
-- 文件名：`protagonist_cursed_pilgrim_chibi_{action}_sheet.png`
-- 切片帧名：`{action}_0`、`{action}_1`… 按播放顺序编号。
+- 导出：**RGBA 透明底**。环境 props 清单里的「纯黑底」不适用于主角动作；黑底进引擎会被当成实体像素。
+- 帧名：`{action}_0`、`{action}_1`… 按播放顺序编号。
 
 ### AI 出图 / 抠图流程（Cursor）
 
 Cursor 图像生成**没有真正 alpha**，不要直接要「透明底」。标准流程：
 
 1. 生成在纯绿幕 `#00FF00` 上（勿用黑底/奶油白底；黑发与白碎翼会被误抠）。
-2. 按帧用 Python `rembg` 抠透明，模型优先 **`birefnet-general-lite`**；本角色 sheet 勿用 `isnet-anime`（易掏空）。
-3. 去绿边溢色后拼回 sheet：全帧脚底共线；站立/伸展帧内容高锁 idle（±5%）。
-4. 写入上述 RGBA 资源；需要时可另存 `*_sheet_green.png` 作源图。
+2. 按帧用 Python `rembg` 抠透明，模型优先 **`birefnet-general-lite`**；本角色勿用 `isnet-anime`（易掏空）。
+3. 去绿边溢色后写出单帧：全帧脚底共线；站立/伸展帧内容高锁 idle（±5%）。
+4. 写入 `Animations/{action}/`；需要时可另存绿幕源图在 `Tools/` 下。
 
 细则见 `.cursor/rules/character-sprite-cutout.mdc`。
 
@@ -60,27 +59,29 @@ Cursor 图像生成**没有真正 alpha**，不要直接要「透明底」。标
 | 项 | 值 |
 |----|-----|
 | Texture Type | Sprite (2D and UI) |
-| Sprite Mode | Multiple |
+| Sprite Mode | **Single** |
 | Pixels Per Unit | **256** |
 | Pivot | **Bottom**，`(0.5, 0)` |
 | Mesh Type | Tight 可；与现有 idle/run 一致即可 |
 | Alpha Is Transparency | 开启 |
 
+可用 `Tools/install_anim_frames.py` 从拆帧目录批量写入 meta。
+
 ---
 
 ## 3. 各动作帧内容
 
-| 动作 | 文件 | 最少帧 | 顺序 / 要点 |
+| 动作 | 目录 | 最少帧 | 顺序 / 要点 |
 |------|------|--------|-------------|
-| idle | `..._idle_sheet.png` | 4 | 呼吸循环；脚几乎不动；**空手**（取残誓前） |
-| idle（持刃） | `..._idle_oathblade_sheet.png` | 4 | 同呼吸循环；右手垂持残誓；尺度锁 idle；帧名 `idle_oathblade_0…3` |
-| run | `..._run_sheet.png` | 8 | 循环跑；可略前倾；尺度锁 idle |
-| jump | `..._jump_sheet.png` | 4 | `0` 起跳蹲 → `1` 升空 → `2` 顶点 → `3` 下落 |
-| getup | `..._getup_sheet.png` | 6～7 | 躺 → 撑起 → 站起；末帧尽量贴近 idle_0 |
-| attack | `..._attack_sheet.png` | 3～5 | 持 **污光断剑·残誓** 挥刃/刺击；造型与帧顺序见 [protagonist_weapon_spec.md](./protagonist_weapon_spec.md)；刀光优先另出 VFX |
-| hurt | `..._hurt_sheet.png` | 1～2 | 受击后仰/缩 |
-| death | `..._death_sheet.png` | 2～4 | 倒地 / 消散 |
-| crouch | `..._crouch_sheet.png` | 可选 | 蹲或滑；头宽仍锁 idle |
+| idle | `Animations/idle/` | 4 | 呼吸循环；脚几乎不动；**空手**（取残誓前） |
+| idle（持刃） | `Animations/idle_oathblade/` | 4 | 同呼吸循环；右手垂持残誓；尺度锁 idle；帧名 `idle_oathblade_0…3` |
+| run | `Animations/run/` | 8 | 循环跑；可略前倾；尺度锁 idle |
+| jump | `Animations/jump/` | 4 | `0` 起跳蹲 → `1` 升空 → `2` 顶点 → `3` 下落 |
+| getup | `Animations/getup/` | 6～7 | 躺 → 撑起 → 站起；末帧尽量贴近 idle_0 |
+| attack | `Animations/attack/` | 3～5 | 持 **污光断剑·残誓** 挥刃/刺击；造型与帧顺序见 [protagonist_weapon_spec.md](./protagonist_weapon_spec.md)；刀光优先另出 VFX |
+| hurt | `Animations/hurt/` | 1～2 | 受击后仰/缩 |
+| death | `Animations/death/` | 2～4 | 倒地 / 消散 |
+| crouch | `Animations/crouch/` | 可选 | 蹲或滑；头宽仍锁 idle |
 
 ### Jump 补充
 
@@ -102,7 +103,7 @@ Cursor 图像生成**没有真正 alpha**，不要直接要「透明底」。标
 - [ ] 站立或升空等「伸展」帧，内容高相对 idle 在 ±5% 内
 - [ ] 全帧脚底共线；透明底（边角 alpha = 0）
 - [ ] 帧名 `{action}_0…n` 顺序正确
-- [ ] Unity 切片后 pivot 在脚底；与 idle 切换无突然缩小、无脚底打滑
+- [ ] Unity pivot 在脚底；与 idle 切换无突然缩小、无脚底打滑
 - [ ] 未用代码 scale 补偿本套动作
 
 ---
@@ -114,7 +115,8 @@ Cursor 图像生成**没有真正 alpha**，不要直接要「透明底」。标
 | `Docs/Art/asset_checklist.md` | 还缺哪些文件、优先级 |
 | 本文 | 主角动作像素尺度与导入约定 |
 | [protagonist_weapon_spec.md](./protagonist_weapon_spec.md) | 主武器「残誓」造型、持刃帧与刀光 VFX 边界 |
-| `StepAPlayground` | 从 `*_sheet.png` 加载帧并交给玩家 |
+| `PlayerAnimationLoader` | 从 `Animations/{action}/` 加载单帧 |
+| `StepAPlayground` / `CathedralIntroZoneA` | 调用 loader 并把帧交给玩家 |
 | `PlayerSpriteAnimator` | idle / run / jump / getup 播放逻辑 |
 
 历史说明：早期 jump 原稿约只有 idle 一半像素高，进游戏会明显缩水；已按本文放大对齐 idle。后续 attack 等勿再犯同一问题。
