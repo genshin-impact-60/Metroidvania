@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Loads protagonist animation frames from per-action folders
-/// under Assets/Art/Characters/Animations/{idle,run,...}.
+/// Editor-only: load protagonist frames from
+/// Assets/Art/Characters/Animations/{idle,run,...} and pack them onto the Player prefab.
 /// </summary>
 public static class PlayerAnimationLoader
 {
@@ -18,19 +19,18 @@ public static class PlayerAnimationLoader
     public static Sprite[] LoadFrames(string folderPath)
     {
         var frames = new List<Sprite>();
-#if UNITY_EDITOR
         if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
             return frames.ToArray();
 
         string normFolder = folderPath.Replace('\\', '/').TrimEnd('/');
-        foreach (var guid in UnityEditor.AssetDatabase.FindAssets("t:Texture2D", new[] { folderPath }))
+        foreach (var guid in AssetDatabase.FindAssets("t:Texture2D", new[] { folderPath }))
         {
-            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid).Replace('\\', '/');
+            string path = AssetDatabase.GUIDToAssetPath(guid).Replace('\\', '/');
             string parent = Path.GetDirectoryName(path)?.Replace('\\', '/');
             if (parent != normFolder)
                 continue;
 
-            foreach (var asset in UnityEditor.AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(path))
             {
                 if (asset is Sprite sprite)
                     frames.Add(sprite);
@@ -38,7 +38,6 @@ public static class PlayerAnimationLoader
         }
 
         frames.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
-#endif
         return frames.ToArray();
     }
 

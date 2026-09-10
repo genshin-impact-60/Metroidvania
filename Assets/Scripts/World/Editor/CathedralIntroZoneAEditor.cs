@@ -18,19 +18,27 @@ public class CathedralIntroZoneAEditor : Editor
 
         EditorGUILayout.HelpBox(
             "场景即关卡（与常见 Unity 流程一致）\n"
-            + "1. 在 Hierarchy / Scene 里直接拖地板、顶棚、人物、圣水\n"
-            + "2. Ctrl+S 保存场景 —— 改动会留下，不必 Bake/Rebuild\n"
-            + "3. 仅空场景或要推倒重来时，才用下面的「生成 / 重置」",
+            + "1. 角色：Prefabs/Player/Player.prefab\n"
+            + "2. 环境：Prefabs/Tiles（地板/顶棚/装饰）与 Prefabs/Hazards/HolyWater\n"
+            + "3. 在 Hierarchy / Scene 里拖实例，Ctrl+S 保存\n"
+            + "4. Play 只播场景。生成 / 重置只在编辑器里跑，不会进包",
             MessageType.Info);
 
-        bool hasContent = zone != null && zone.transform.Find("Platforms") != null;
+        if (GUILayout.Button("创建 / 刷新 Player Prefab", GUILayout.Height(24)))
+            PlayerPrefabBuilder.CreateOrUpdateMenu();
+        if (GUILayout.Button("创建环境套件 Prefab 并转换场景物件", GUILayout.Height(24)))
+            EnvKitBuilder.CreateOrUpdateMenu();
+
+        bool hasContent = zone != null && zone.HasSeededContent;
 
         using (new EditorGUI.DisabledScope(hasContent))
         {
             if (GUILayout.Button("首次生成 Zone A（空场景）", GUILayout.Height(32)))
             {
+                PlayerPrefabBuilder.EnsurePrefabAndWireScenes();
+                EnvKitBuilder.EnsureKitsAndConvert();
                 Undo.RegisterFullObjectHierarchyUndo(zone.gameObject, "Generate Zone A");
-                zone.Build();
+                ZoneASeeder.SeedIfEmpty(zone);
                 EditorUtility.SetDirty(zone);
                 if (zone.gameObject.scene.IsValid())
                     EditorSceneManager.MarkSceneDirty(zone.gameObject.scene);
@@ -46,8 +54,10 @@ public class CathedralIntroZoneAEditor : Editor
                     "重置生成",
                     "取消"))
             {
+                PlayerPrefabBuilder.EnsurePrefabAndWireScenes();
+                EnvKitBuilder.EnsureKitsAndConvert();
                 Undo.RegisterFullObjectHierarchyUndo(zone.gameObject, "Regenerate Zone A");
-                zone.Rebuild();
+                ZoneASeeder.Rebuild(zone);
                 EditorUtility.SetDirty(zone);
                 if (zone.gameObject.scene.IsValid())
                     EditorSceneManager.MarkSceneDirty(zone.gameObject.scene);
@@ -65,7 +75,7 @@ public class CathedralIntroZoneAEditor : Editor
         }
 
         EditorGUILayout.HelpBox(
-            "导出备份仅作保险 / 重置种子，日常不需要点。顶棚与手摆物件以 Scene 为准。",
+            "导出备份仅作保险 / 重置种子，日常改关只存 Scene。生成代码在 Editor 程序集，不会打进 Player 包。",
             MessageType.None);
     }
 
@@ -114,7 +124,7 @@ public class CathedralIntroZoneAEditor : Editor
                 foreach (var zone in root.GetComponentsInChildren<CathedralIntroZoneA>(true))
                 {
                     Undo.RegisterFullObjectHierarchyUndo(zone.gameObject, "Regenerate Zone A");
-                    zone.Rebuild();
+                    ZoneASeeder.Rebuild(zone);
                     EditorUtility.SetDirty(zone);
                     count++;
                 }
@@ -253,7 +263,7 @@ public class CathedralIntroZoneAEditor : Editor
         snap.holyHitOy = col.offset.y;
     }
 
-    static readonly Vector3 PlayerVisualDefaultLocal = new Vector3(0f, -0.05f, 0f);
+    static readonly Vector3 PlayerVisualDefaultLocal = new Vector3(0.07f, -0.2f, 0f);
 
     static void CapturePlayerPose(PlayerController player, ZoneALayoutSnapshot snap)
     {

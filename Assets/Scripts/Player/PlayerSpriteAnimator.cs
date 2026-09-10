@@ -4,6 +4,7 @@ public class PlayerSpriteAnimator : MonoBehaviour
 {
     [SerializeField] SpriteRenderer target;
     [SerializeField] Sprite[] idleFrames;
+    [SerializeField] Sprite[] idleArmedFrames;
     [SerializeField] Sprite[] runFrames;
     [SerializeField] Sprite[] jumpFrames;
     [SerializeField] Sprite[] getupFrames;
@@ -42,6 +43,12 @@ public class PlayerSpriteAnimator : MonoBehaviour
     {
         target = spriteRenderer;
     }
+
+    public Sprite[] IdleFrames => idleFrames;
+    public Sprite[] IdleArmedFrames => idleArmedFrames;
+    public Sprite[] RunFrames => runFrames;
+    public Sprite[] JumpFrames => jumpFrames;
+    public Sprite[] GetupFrames => getupFrames;
 
     public bool HasRunCycle => runFrames != null && runFrames.Length > 1;
 
@@ -96,6 +103,11 @@ public class PlayerSpriteAnimator : MonoBehaviour
     public void SetGetupFrames(Sprite[] getup)
     {
         getupFrames = getup;
+    }
+
+    public void SetIdleArmedFrames(Sprite[] idleArmed)
+    {
+        idleArmedFrames = idleArmed;
     }
 
     /// <summary>Play getup once from frame 0. Returns false if no getup frames.</summary>

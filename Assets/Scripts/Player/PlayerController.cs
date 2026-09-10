@@ -75,6 +75,7 @@ public class PlayerController : MonoBehaviour
         CacheCapsule();
         ApplyVisualFeetOffset(visualFeetOffset);
         SyncGroundCheckToCapsule();
+        HydrateAnimationFromAnimator();
     }
 
     /// <summary>Standing / getup capsules; getup should share the standing bottom so shrink does not lift the root.</summary>
@@ -225,6 +226,7 @@ public class PlayerController : MonoBehaviour
         animator.SetFrames(ActiveIdleFrames(), run);
         animator.SetJumpFrames(jump);
         animator.SetGetupFrames(getup);
+        animator.SetIdleArmedFrames(idleArmed);
 
         if (visual == null)
             return;
@@ -266,6 +268,22 @@ public class PlayerController : MonoBehaviour
     void ContextUnequipOathblade()
     {
         SetOathblade(false);
+    }
+
+    void HydrateAnimationFromAnimator()
+    {
+        if (animator == null)
+            animator = GetComponent<PlayerSpriteAnimator>();
+        if (animator == null)
+            return;
+
+        if (visual != null)
+            animator.Bind(visual);
+
+        if (_idleUnarmed == null || _idleUnarmed.Length == 0)
+            _idleUnarmed = animator.IdleFrames;
+        if (_idleArmed == null || _idleArmed.Length == 0)
+            _idleArmed = animator.IdleArmedFrames;
     }
 
     Sprite[] ActiveIdleFrames()
@@ -332,6 +350,7 @@ public class PlayerController : MonoBehaviour
         CacheCapsule();
         ApplyVisualFeetOffset(visualFeetOffset);
         SyncGroundCheckToCapsule();
+        HydrateAnimationFromAnimator();
         BindInput();
         _spawnPosition = transform.position;
     }

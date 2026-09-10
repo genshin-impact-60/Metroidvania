@@ -10,15 +10,21 @@ public class StepAPlaygroundEditor : Editor
 
         EditorGUILayout.Space(8);
         var playground = (StepAPlayground)target;
+        if (GUILayout.Button("Create / Refresh Player Prefab", GUILayout.Height(24)))
+            PlayerPrefabBuilder.CreateOrUpdateMenu();
+
         if (GUILayout.Button("Rebuild Playground", GUILayout.Height(32)))
         {
+            PlayerPrefabBuilder.EnsurePrefabAndWireScenes();
+            EnvKitBuilder.EnsureKitsAndConvert();
             Undo.RegisterFullObjectHierarchyUndo(playground.gameObject, "Rebuild Playground");
-            playground.Rebuild();
+            PlaygroundSeeder.Rebuild(playground);
             EditorUtility.SetDirty(playground);
         }
 
         EditorGUILayout.HelpBox(
-            "选中这个物体后点上面的按钮，会重新生成平台和带动画的主角。然后按 Play，用 A/D 跑、空格跳。",
+            "这是 SampleScene 编辑器沙盒，不是正式关卡。正式切片在 Cathedral_Hub。\n"
+            + "Rebuild 只在编辑器里种 Prefab；Play 不会重建。",
             MessageType.Info);
     }
 }
