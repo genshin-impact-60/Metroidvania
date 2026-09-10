@@ -15,12 +15,12 @@
 
 | 区段 | 状态 | 入口 / 备注 |
 |------|------|-------------|
-| **A 裂隙坑** | **进行中（可玩）** | `CathedralIntroZoneA`；getup、死墙、裂隙纵深、**连续地面+顶棚**、圣水气氛+伤害；**SV1 后置** |
+| **A 裂隙坑** | **可验收** | getup、死墙、裂隙、地面+顶棚、圣水、**SV1**、气氛 props、旁白/交互 UI |
 | B 圣水走廊 | 未做 | 仅 A 右侧地板 stub |
 | C 没收龛 | 未做 | — |
 | D 出口拱 | 未做 | — |
 
-**A 段临时读档规则：** 尚无正式存档祭台；死亡 / 掉虚空回 `PlayerController.SpawnPosition`（出生点）。正式 `SaveShrine`（SV1/SV2）与序列化读档锚点**后置**，见 §3.A / §7。
+**A 段读档：** `SaveShrine`（SV1）已挂；激活后死亡 / 掉虚空回祭台 `SpawnPosition`。完整序列化仍后置。
 
 ---
 
@@ -74,7 +74,7 @@
 | **地面** | 统一完整石砖（`map_tileset_cathedral_1`）铺满可走面；廊底有垫层，坑下仍留裂隙虚空 | ✅ |
 | **房顶** | 连续檐口；生成后可在 Scene 手调，Ctrl+S 保存 | ✅ |
 | **圣水** | 见下表「圣水规格」；**气氛 + 单点伤害**（已拍板） | ✅ |
-| **存档 1（SV1）** | 起身可交互范围内；教第一次存档 / 读档 | ⏸ **后置**；现阶段死回出生点 |
+| **存档 1（SV1）** | 起身可交互范围内；教第一次存档 / 读档 | ✅ 已挂；提示「按 E」+ 旁白 UI |
 
 #### 圣水规格（A · 已锁定实现）
 
@@ -86,9 +86,9 @@
 | 伤害 | 踩中 **1** 点；满血 3；可绕开；**勿整坑持续掉血** |
 | 触发 | `Hazard` 层 Trigger；`DamageZone`；getup / 控制锁期间不伤 |
 | 反馈 | 短击退 + ~0.85s 无敌帧 + 闪烁；首次命中旁白一句 |
-| 旁白 | 「圣水灼肤——这里不欢迎他/她。」（一期 Console / 日后 UI，只播一次） |
+| 旁白 | 「圣水灼肤——这里不欢迎他/她。」（`GameFlavorUI`，只播一次） |
 | 美术 | 顶棚：`cathedral_15` / `15b` / `15c` 无缝中段；滴水：`holywater_ceiling_block`；地面水洼：`holywater_basin_pool` |
-| 脚本 | `PlaceHolyWater` / `DamageZone` / `PlayerHealth`（场景手摆；可选重置生成） |
+| 脚本 | `DamageZone` / `PlayerHealth`（场景手摆） |
 
 ### B · 圣水走廊（空手教学）
 
@@ -143,14 +143,14 @@
 |----|------|------|-------------|------|------|
 | S0 | Player Spawn | A | — | getup 起点 | ✅ |
 | HZ0 | 圣水灼点 + 顶棚滴水块 | A | `basin` + `cathedral_15` 顶棚 + `ceiling_block` 同行 | 气氛；1 伤可绕 | ✅ |
-| SV1 | 存档祭台 | A | `map_interact_save_cathedral` 熄/燃 | 教交互；死亡回最近激活档 | ⏸ 后置 |
+| SV1 | 存档祭台 | A | `save_cathedral_*` + `SaveShrine` | 教交互；死亡回最近激活档 | ✅ |
 | HZ1 | 地刺短条 | B | `spike_floor_cathedral`（`map_hazards_cathedral`） | 教伤害/击退 | ❌ |
 | PL1 | 矮平台 ×1～2 | B | `map_tileset_cathedral` 块 | 教跳 | ❌ |
 | WP1 | **没收架 + 残誓** | C | 交互物；剑可用 `stained_oathblade_concept` 缩小占位 | 解锁 `HasOathblade` | ❌ |
 | SV2 | 存档祭台 | C→D | 同上 | 拾剑后安检点 | ⏸ 后置 |
 | DR1 | 出口拱门 | D | `door_basic_open` 或无脚本门洞 | 进中殿 / 确认房 | ❌ |
 | FX1 | 假门或封墙 | A 左 / 上层 | props 铁栅/砖封 | 暗示后续路线 | ✅ 左封门；上层后补 |
-| PR* | 跪天使、褪红旗、碎柱 | 各段 | `Props/cathedral/` | 纯装饰，不挡主路 | ✅ A 段已摆 |
+| PR* | 跪天使、褪红旗、碎柱、倒十字、水晶、灯 | A | `Props/cathedral/` | 纯装饰，不挡主路 | ✅ |
 
 环境资源目录（重组后）：
 
@@ -190,7 +190,7 @@
 |-------------|------|------|
 | `HasOathblade == false` | 忽略 Attack 输入；无空手攻击动画 | 设计锁定；C 段落地 |
 | 交互没收架 | 设 `HasOathblade = true`；可选播短持刃/挂鞘演出 | ❌ |
-| `SaveShrine` ×2 | 写入场景、位置、能力旗（含残誓）、钥匙等 | 脚本壳有；**本房未挂**（后置） |
+| `SaveShrine` ×2 | 写入场景、位置、能力旗（含残誓）、钥匙等 | ✅ SV1 已挂（一期只改重生点）；SV2 后置 |
 | `DamageZone`（圣水 / 日后刺） | 伤害 + 短击退 + 无敌帧；死则回最近存档（现回 Spawn） | ✅ A 圣水 |
 | 出口 | 同场景走过去即可；若拆门脚本则 Fade 可后补 | ❌ |
 
@@ -208,8 +208,8 @@
 - [x] 连续顶棚；圣水滴水块对准灼点
 - [x] 顶棚为 `cathedral_15` 变体；圣水 X 同排为 `holywater_ceiling_block`；地面 basin 灼点可踩
 - [x] 灼点可绕；踩中 1 伤 + 击退 + 无敌；首次旁白一句
-- [x] 掉虚空 / 死透回出生点（无 SV1 时）
-- [ ] SV1 可存可死可读回裂隙旁（后置）
+- [x] 掉虚空 / 死透回出生点（无 SV1 时）或回已激活祭台
+- [x] SV1 可存可死可读回祭台旁
 
 ### 整房（待 B/C/D）
 
@@ -225,11 +225,10 @@
 
 ## 9. 实现备注
 
-- 内部区域名：`Cathedral_Hub / Zone_Intro`；组件 `CathedralIntroZoneA`。
-- **摆关方式（场景即真相）：** 在 Hierarchy / Scene 直接拖地板、顶棚、人物、圣水 → **Ctrl+S 保存场景**。日常不需要 Bake / Rebuild。
-- 空场景可点 **首次生成**；只有要推倒重来时才用 **重置生成**（会清空手改）。
-- **导出备份** 可选，写入 `ZoneA_Layout.json` 作保险 / 重置种子。
-- 美术：顶棚可用生成器铺 `cathedral_15` / `15b` / `15c` + `holywater_ceiling_block`，之后在场景里手调并保存。
+- 内部区域名：`Cathedral_Hub / Zone_Intro`；组件 `CathedralIntroZoneA`（Play 只绑定相机 / 出生点）。
+- **摆关方式（场景即真相）：** 在 Hierarchy / Scene 直接拖地板、顶棚、人物、圣水 → **Ctrl+S 保存场景**。无生成 / 重置 / 布局备份工具。
+- 美术：顶棚用手摆 `cathedral_15` / `15b` / `15c` + `holywater_ceiling_block`。
 - 比例目标：chibi 站在侧厅地板上像「人在侧廊」，不要蚂蚁感；角色 sheet PPU **256**，角色高约 2；环境 hazard sheet PPU **100**。
-- 建议下一刀：**SV1**，或铺 **B 走廊**（走/跳/刺，复用 `DamageZone`）。
+- 建议下一刀：铺 **B 走廊**（走/跳/刺，复用 `DamageZone`）。
+- A 气氛 props 若 Hierarchy 里缺失：菜单 `Tools/Cathedral/Seed Zone A Decor` 后 Ctrl+S。
 - 做完本房验收后，再铺右侧中殿的裂隙门 / 净光障壁「先见后至」。

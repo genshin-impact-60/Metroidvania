@@ -26,6 +26,7 @@ public static class EnvKitBuilder
     const string BgSpritePath = "Assets/Art/Environment/Backgrounds/map_bg_cathedral.png";
     const string BasinSpritePath = "Assets/Art/Environment/Hazards/holywater_basin_pool.png";
     const string SaveOffSpritePath = "Assets/Art/Environment/Interact/save_cathedral_off.png";
+    const string SaveOnSpritePath = "Assets/Art/Environment/Interact/save_cathedral_on.png";
 
     static EnvKitBuilder()
     {
@@ -39,7 +40,7 @@ public static class EnvKitBuilder
         AssetDatabase.SaveAssets();
         EditorUtility.DisplayDialog(
             "Environment Kit",
-            "Created/updated kit prefabs and converted loose Zone A pieces.\nSave the scene (Ctrl+S).",
+            "Created/updated kit prefabs and converted loose environment pieces.\nSave the scene (Ctrl+S).",
             "OK");
     }
 
@@ -58,9 +59,10 @@ public static class EnvKitBuilder
         var background = LoadOrCreate(BackgroundPath, CreateBackground);
         var blocker = LoadOrCreate(BlockerPath, CreateBlocker);
         var holy = LoadOrCreate(HolyWaterPath, CreateHolyWater);
-        var shrine = LoadOrCreate(SaveShrinePath, CreateSaveShrine);
+        LoadOrCreate(SaveShrinePath, CreateSaveShrine);
+        WireSaveShrineSprites();
 
-        AssignToOpenContent(solid, decor, background, blocker, holy, shrine);
+        AssignToOpenContent(solid);
         ConvertLoosePieces(solid, decor, background, blocker, holy);
     }
 
@@ -218,22 +220,23 @@ public static class EnvKitBuilder
             go.layer = interact;
         go.tag = "Interact";
 
-        var sprite = LoadSprite(SaveOffSpritePath);
+        var off = LoadSprite(SaveOffSpritePath);
+        var on = LoadSprite(SaveOnSpritePath);
         var sr = go.AddComponent<SpriteRenderer>();
-        ApplySprite(sr, sprite, "Entities", 5);
+        ApplySprite(sr, off, "Entities", 5);
 
-        if (sprite != null)
+        if (off != null)
         {
-            float scale = 2.2f / Mathf.Max(0.01f, sprite.bounds.size.y);
+            float scale = 2.2f / Mathf.Max(0.01f, off.bounds.size.y);
             go.transform.localScale = Vector3.one * scale;
         }
 
         var col = go.AddComponent<BoxCollider2D>();
         col.isTrigger = true;
-        if (sprite != null)
+        if (off != null)
         {
-            col.size = sprite.bounds.size * 0.55f;
-            col.offset = new Vector2(0f, sprite.bounds.size.y * 0.35f);
+            col.size = off.bounds.size * 0.55f;
+            col.offset = new Vector2(0f, off.bounds.size.y * 0.35f);
         }
         else
         {
@@ -242,17 +245,46 @@ public static class EnvKitBuilder
         }
 
         var shrine = go.AddComponent<SaveShrine>();
-        shrine.Bind(sr, "save_cathedral_sv1");
+        shrine.Bind(sr, "save_cathedral_sv1", off, on);
         return go;
     }
 
-    static void AssignToOpenContent(
-        GameObject solid,
-        GameObject decor,
-        GameObject background,
-        GameObject blocker,
-        GameObject holy,
-        GameObject shrine)
+    static void WireSaveShrineSprites()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SaveShrinePath);
+        if (prefab == null)
+            return;
+
+        var shrine = prefab.GetComponent<SaveShrine>();
+        var sr = prefab.GetComponent<SpriteRenderer>();
+        if (shrine == null || sr == null)
+            return;
+
+        var off = LoadSprite(SaveOffSpritePath);
+        var on = LoadSprite(SaveOnSpritePath);
+        if (off == null && on == null)
+            return;
+
+        var so = new SerializedObject(shrine);
+        so.FindProperty("visual").objectReferenceValue = sr;
+        so.FindProperty("inactiveSprite").objectReferenceValue = off;
+        so.FindProperty("activeSprite").objectReferenceValue = on;
+        so.FindProperty("inactiveTint").colorValue = Color.white;
+        so.FindProperty("activeTint").colorValue = Color.white;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        if (off != null)
+        {
+            sr.sprite = off;
+            sr.color = Color.white;
+            EditorUtility.SetDirty(sr);
+        }
+
+        EditorUtility.SetDirty(shrine);
+        EditorUtility.SetDirty(prefab);
+    }
+
+    static void AssignToOpenContent(GameObject solid)
     {
         for (int s = 0; s < SceneManager.sceneCount; s++)
         {
@@ -261,36 +293,9 @@ public static class EnvKitBuilder
                 continue;
             foreach (var root in scene.GetRootGameObjects())
             {
-                foreach (var zone in root.GetComponentsInChildren<CathedralIntroZoneA>(true))
-                    AssignZone(zone, solid, decor, background, blocker, holy, shrine, scene);
                 foreach (var playground in root.GetComponentsInChildren<StepAPlayground>(true))
                     AssignPlayground(playground, solid, scene);
             }
-        }
-    }
-
-    static void AssignZone(
-        CathedralIntroZoneA zone,
-        GameObject solid,
-        GameObject decor,
-        GameObject background,
-        GameObject blocker,
-        GameObject holy,
-        GameObject shrine,
-        Scene scene)
-    {
-        var so = new SerializedObject(zone);
-        SetRef(so, "envSolidPrefab", solid);
-        SetRef(so, "envDecorPrefab", decor);
-        SetRef(so, "envBackgroundPrefab", background);
-        SetRef(so, "envBlockerPrefab", blocker);
-        SetRef(so, "holyWaterPrefab", holy);
-        SetRef(so, "saveShrinePrefab", shrine);
-        if (so.ApplyModifiedPropertiesWithoutUndo())
-        {
-            EditorUtility.SetDirty(zone);
-            if (scene.IsValid())
-                EditorSceneManager.MarkSceneDirty(scene);
         }
     }
 

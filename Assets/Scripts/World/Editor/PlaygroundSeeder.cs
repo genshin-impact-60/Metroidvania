@@ -109,10 +109,6 @@ public static class PlaygroundSeeder
         cam.clearFlags = CameraClearFlags.SolidColor;
         if (cam.transform.position.z > -5f)
             cam.transform.position = new Vector3(0f, 2f, -10f);
-
-        var follow = cam.GetComponent<CameraFollow>();
-        if (follow != null)
-            follow.SetOrthoSize(4.5f);
     }
 
     static void PlaceRow(

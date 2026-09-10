@@ -46,6 +46,7 @@ public class DamageZone : MonoBehaviour
         if (!_loggedMessage && !string.IsNullOrEmpty(firstHitMessage))
         {
             _loggedMessage = true;
+            GameFlavorUI.ShowFlavor(firstHitMessage);
             Debug.Log(firstHitMessage);
         }
     }

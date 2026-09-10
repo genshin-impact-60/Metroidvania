@@ -224,8 +224,6 @@ public static class PlayerPrefabBuilder
                 continue;
             foreach (var root in scene.GetRootGameObjects())
             {
-                foreach (var zone in root.GetComponentsInChildren<CathedralIntroZoneA>(true))
-                    AssignIfChanged(zone, "playerPrefab", controller, scene);
                 foreach (var playground in root.GetComponentsInChildren<StepAPlayground>(true))
                     AssignIfChanged(playground, "playerPrefab", controller, scene);
             }

@@ -134,3 +134,6 @@ venv/
 
 # Local codegraph index (if you run `codegraph init`)
 .codegraph/
+
+#others
+tools/

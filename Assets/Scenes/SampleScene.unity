@@ -758,7 +758,6 @@ MonoBehaviour:
   target: {fileID: 1427406327}
   offset: {x: 0, y: 1.2, z: -10}
   followLerp: 12
-  orthoSize: 7
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
