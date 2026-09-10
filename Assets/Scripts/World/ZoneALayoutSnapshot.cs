@@ -2,9 +2,8 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Serializable Zone A layout captured from Hierarchy (Bake Hierarchy → Layout).
-/// Rebuild reads this instead of hand-tuned constants.
-/// Colliders: Bake Colliders → Layout (or full layout bake) writes size/offset.
+/// Serializable Zone A layout — optional backup / regenerate seed (not the daily source of truth).
+/// Daily edits live in the Unity Scene; export via Inspector → 导出备份.
 /// </summary>
 [Serializable]
 public class ZoneALayoutSnapshot

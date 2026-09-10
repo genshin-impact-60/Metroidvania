@@ -1,0 +1,34 @@
+---
+description: >-
+  All image generation: always generate on chroma green #00FF00, then rembg
+  cutout to RGBA. Never ask the model for transparent/black/white backgrounds.
+  Use whenever generating, repairing, or re-keying any game art.
+alwaysApply: true
+---
+
+# Image generation: green screen → cutout
+
+**Every** generated image (characters, props, tiles, VFX, UI, etc.) must follow this pipeline. No exceptions.
+
+## Do not
+
+- Do **not** ask the image model for a transparent/alpha background (Cursor gen is RGB-only; “transparent” becomes white/cream and eats light pixels).
+- Do **not** generate on black, cream, white, or busy backgrounds.
+- Do **not** ship chroma-colored fringing into Unity assets.
+- Do **not** write new Unity character anims as multi-frame `*_sheet.png` — one PNG per frame.
+
+## Pipeline (required)
+
+1. **Generate** on solid chroma green `#00FF00` (flat, no gradient/shadow/floor). Green sources may live under `Tools/` if useful.
+2. **Cut out** with Python `rembg` (`birefnet-general-lite` preferred; avoid `isnet-anime` for chibi — it hollows frames). Pad with green before `remove()`.
+3. **Despill** residual green on edges after rembg.
+4. **Write** RGBA PNGs to the target asset path (or via install scripts under `Tools/`).
+5. **Verify** cream + dark composites (no green fringe, no holes in light/dark pixels).
+
+## Character animation extras
+
+When the asset is a **character frame** (idle / run / jump / getup / attack / …):
+
+- Feet on one baseline; standing/apex content height within **±5% of idle_0** (~872px). Canvas ~`650×900` (or match existing action sizes).
+- Install under `Assets/Art/Characters/Animations/{action}/{action}_N.png` with Single-sprite meta (PPU 256, pivot bottom). Use `Tools/install_anim_frames.py` when batching.
+- Specs: `Docs/Art/protagonist_sprite_spec.md`.

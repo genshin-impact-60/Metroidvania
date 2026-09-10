@@ -16,38 +16,60 @@ public class CathedralIntroZoneAEditor : Editor
         EditorGUILayout.Space(8);
         var zone = (CathedralIntroZoneA)target;
 
-        if (GUILayout.Button("Bake Hierarchy → Layout", GUILayout.Height(32)))
+        EditorGUILayout.HelpBox(
+            "场景即关卡（与常见 Unity 流程一致）\n"
+            + "1. 在 Hierarchy / Scene 里直接拖地板、顶棚、人物、圣水\n"
+            + "2. Ctrl+S 保存场景 —— 改动会留下，不必 Bake/Rebuild\n"
+            + "3. 仅空场景或要推倒重来时，才用下面的「生成 / 重置」",
+            MessageType.Info);
+
+        bool hasContent = zone != null && zone.transform.Find("Platforms") != null;
+
+        using (new EditorGUI.DisabledScope(hasContent))
+        {
+            if (GUILayout.Button("首次生成 Zone A（空场景）", GUILayout.Height(32)))
+            {
+                Undo.RegisterFullObjectHierarchyUndo(zone.gameObject, "Generate Zone A");
+                zone.Build();
+                EditorUtility.SetDirty(zone);
+                if (zone.gameObject.scene.IsValid())
+                    EditorSceneManager.MarkSceneDirty(zone.gameObject.scene);
+            }
+        }
+
+        if (GUILayout.Button("重置生成 Zone A…（会清空手改）", GUILayout.Height(28)))
+        {
+            if (EditorUtility.DisplayDialog(
+                    "重置 Zone A",
+                    "将删除当前 Zone A 下所有子物体，并按备份 JSON / 代码默认重新生成。\n\n"
+                    + "场景里的手调会丢失。确定？",
+                    "重置生成",
+                    "取消"))
+            {
+                Undo.RegisterFullObjectHierarchyUndo(zone.gameObject, "Regenerate Zone A");
+                zone.Rebuild();
+                EditorUtility.SetDirty(zone);
+                if (zone.gameObject.scene.IsValid())
+                    EditorSceneManager.MarkSceneDirty(zone.gameObject.scene);
+            }
+        }
+
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("可选备份", EditorStyles.boldLabel);
+        if (GUILayout.Button("导出备份 → ZoneA_Layout.json", GUILayout.Height(24)))
         {
             if (BakeLayout(zone, out var message))
-                EditorUtility.DisplayDialog("Zone A Layout Baked", message, "OK");
+                EditorUtility.DisplayDialog("备份已导出", message, "OK");
             else
-                EditorUtility.DisplayDialog("Bake Failed", message, "OK");
-        }
-
-        if (GUILayout.Button("Bake Colliders → Layout", GUILayout.Height(32)))
-        {
-            if (BakeLayout(zone, out var message, collidersOnlyHint: true))
-                EditorUtility.DisplayDialog("Zone A Colliders Baked", message, "OK");
-            else
-                EditorUtility.DisplayDialog("Bake Failed", message, "OK");
-        }
-
-        if (GUILayout.Button("Rebuild Zone A", GUILayout.Height(32)))
-        {
-            Undo.RegisterFullObjectHierarchyUndo(zone.gameObject, "Rebuild Zone A");
-            zone.Rebuild();
-            EditorUtility.SetDirty(zone);
+                EditorUtility.DisplayDialog("导出失败", message, "OK");
         }
 
         EditorGUILayout.HelpBox(
-            "Cathedral Intro · Zone A（裂隙坑）\n" +
-            "手调 Hierarchy / 碰撞后点 Bake 写入 ZoneA_Layout.json。\n" +
-            "站立胶囊：Player CapsuleCollider2D；getup：PlayerController Getup Collider。\n" +
-            "Rebuild Zone A 按烘焙布局+碰撞重建。",
-            MessageType.Info);
+            "导出备份仅作保险 / 重置种子，日常不需要点。顶棚与手摆物件以 Scene 为准。",
+            MessageType.None);
     }
 
-    [MenuItem("Tools/Cathedral/Bake Intro Zone A Layout")]
+    [MenuItem("Tools/Cathedral/Export Intro Zone A Backup")]
     public static void BakeAllInOpenScenes()
     {
         int count = 0;
@@ -67,37 +89,20 @@ public class CathedralIntroZoneAEditor : Editor
         }
 
         Debug.Log(count > 0
-            ? $"Baked layout for {count} CathedralIntroZoneA instance(s)."
+            ? $"Exported backup for {count} CathedralIntroZoneA instance(s)."
             : "No CathedralIntroZoneA found in open scenes.");
     }
 
-    [MenuItem("Tools/Cathedral/Bake Intro Zone A Colliders")]
-    public static void BakeCollidersAllInOpenScenes()
-    {
-        int count = 0;
-        for (int i = 0; i < SceneManager.sceneCount; i++)
-        {
-            var scene = SceneManager.GetSceneAt(i);
-            if (!scene.isLoaded)
-                continue;
-            foreach (var root in scene.GetRootGameObjects())
-            {
-                foreach (var zone in root.GetComponentsInChildren<CathedralIntroZoneA>(true))
-                {
-                    if (BakeLayout(zone, out _, collidersOnlyHint: true))
-                        count++;
-                }
-            }
-        }
-
-        Debug.Log(count > 0
-            ? $"Baked colliders for {count} CathedralIntroZoneA instance(s)."
-            : "No CathedralIntroZoneA found in open scenes.");
-    }
-
-    [MenuItem("Tools/Cathedral/Rebuild Intro Zone A")]
+    [MenuItem("Tools/Cathedral/Regenerate Intro Zone A (WIPES)")]
     public static void RebuildAllInOpenScenes()
     {
+        if (!EditorUtility.DisplayDialog(
+                "重置所有 Zone A",
+                "将重置当前已打开场景中的全部 CathedralIntroZoneA（清空手改）。确定？",
+                "重置",
+                "取消"))
+            return;
+
         int count = 0;
         for (int i = 0; i < SceneManager.sceneCount; i++)
         {
@@ -108,7 +113,7 @@ public class CathedralIntroZoneAEditor : Editor
             {
                 foreach (var zone in root.GetComponentsInChildren<CathedralIntroZoneA>(true))
                 {
-                    Undo.RegisterFullObjectHierarchyUndo(zone.gameObject, "Rebuild Zone A");
+                    Undo.RegisterFullObjectHierarchyUndo(zone.gameObject, "Regenerate Zone A");
                     zone.Rebuild();
                     EditorUtility.SetDirty(zone);
                     count++;
@@ -120,11 +125,11 @@ public class CathedralIntroZoneAEditor : Editor
         }
 
         Debug.Log(count > 0
-            ? $"Rebuilt {count} CathedralIntroZoneA instance(s)."
+            ? $"Regenerated {count} CathedralIntroZoneA instance(s)."
             : "No CathedralIntroZoneA found in open scenes.");
     }
 
-    public static bool BakeLayout(CathedralIntroZoneA zone, out string message, bool collidersOnlyHint = false)
+    public static bool BakeLayout(CathedralIntroZoneA zone, out string message)
     {
         if (zone == null)
         {
@@ -137,7 +142,7 @@ public class CathedralIntroZoneAEditor : Editor
         var atmosphere = zone.transform.Find("Atmosphere");
         if (platforms == null)
         {
-            message = "No Platforms child — nothing to bake. Rebuild once first, then hand-tune.";
+            message = "No Platforms child — generate the zone once first, then export.";
             return false;
         }
 
@@ -163,23 +168,11 @@ public class CathedralIntroZoneAEditor : Editor
             snap.holyWaterX = holyRoot.position.x;
             CaptureHolyWaterHitbox(holyRoot, snap);
         }
-        else
-        {
-            var holy = zone.GetComponentInChildren<HolyWaterDripFx>(true);
-            if (holy != null)
-            {
-                snap.hasHolyWater = true;
-                var root = holy.transform.parent != null ? holy.transform.parent : holy.transform;
-                snap.holyWaterX = root.position.x;
-                CaptureHolyWaterHitbox(root, snap);
-            }
-        }
 
         var player = zone.GetComponentInChildren<PlayerController>(true);
         if (player != null)
         {
-            snap.playerX = player.transform.position.x;
-            snap.playerY = player.transform.position.y;
+            CapturePlayerPose(player, snap);
             CapturePlayerColliders(player, snap);
         }
 
@@ -193,9 +186,10 @@ public class CathedralIntroZoneAEditor : Editor
 
         string json = JsonUtility.ToJson(snap, prettyPrint: true);
         string path = CathedralIntroZoneA.LayoutAssetPath;
-        Directory.CreateDirectory(Path.GetDirectoryName(path) ?? "Assets/Scripts/World");
-        File.WriteAllText(path, json, Encoding.UTF8);
-        AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        string absolute = CathedralIntroZoneA.LayoutAbsolutePath;
+        Directory.CreateDirectory(Path.GetDirectoryName(absolute) ?? Path.Combine(Application.dataPath, "Scripts/World"));
+        File.WriteAllText(absolute, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 
         var textAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
         var so = new SerializedObject(zone);
@@ -211,10 +205,9 @@ public class CathedralIntroZoneAEditor : Editor
                 customCols++;
         }
 
-        string focus = collidersOnlyHint ? "colliders + layout" : "layout + colliders";
         message =
-            $"Saved {entries.Count} sprites ({customCols} custom colliders) + {blockers.Count} blocker(s) →\n{path}\n" +
-            $"({focus}) HolyWater={(snap.hasHolyWater ? "yes" : "no")}  " +
+            $"Backup {entries.Count} sprites ({customCols} custom colliders) + {blockers.Count} blocker(s) →\n{path}\n" +
+            $"HolyWater={(snap.hasHolyWater ? "yes" : "no")}  " +
             $"PlayerCol={(snap.hasPlayerCollider ? "yes" : "no")}  " +
             $"Player=({snap.playerX:0.##}, {snap.playerY:0.##})";
         Debug.Log($"[Zone A] {message}");
@@ -229,6 +222,12 @@ public class CathedralIntroZoneAEditor : Editor
             var hw = atmosphere.Find("HolyWater");
             if (hw != null)
                 return hw;
+        }
+
+        foreach (var t in zoneRoot.GetComponentsInChildren<Transform>(true))
+        {
+            if (t.name == "HolyWater")
+                return t;
         }
 
         return null;
@@ -252,6 +251,34 @@ public class CathedralIntroZoneAEditor : Editor
         snap.holyHitH = col.size.y;
         snap.holyHitOx = col.offset.x;
         snap.holyHitOy = col.offset.y;
+    }
+
+    static readonly Vector3 PlayerVisualDefaultLocal = new Vector3(0f, -0.05f, 0f);
+
+    static void CapturePlayerPose(PlayerController player, ZoneALayoutSnapshot snap)
+    {
+        var root = player.transform;
+        Vector3 bakedRoot = root.position;
+        var visual = root.Find("Visual");
+        if (visual != null)
+        {
+            Vector3 visualWorld = visual.position;
+            bakedRoot = visualWorld - PlayerVisualDefaultLocal;
+
+            bool visualDragged = (visual.localPosition - PlayerVisualDefaultLocal).sqrMagnitude > 0.0001f;
+            if (visualDragged)
+            {
+                Undo.RecordObject(root, "Bake Player Pose From Visual");
+                Undo.RecordObject(visual, "Bake Player Pose From Visual");
+                root.position = bakedRoot;
+                visual.localPosition = PlayerVisualDefaultLocal;
+                Debug.LogWarning(
+                    $"[Zone A] Export: Visual was moved — corrected Player root → ({bakedRoot.x:0.##}, {bakedRoot.y:0.##})");
+            }
+        }
+
+        snap.playerX = bakedRoot.x;
+        snap.playerY = bakedRoot.y;
     }
 
     static void CapturePlayerColliders(PlayerController player, ZoneALayoutSnapshot snap)
@@ -297,6 +324,7 @@ public class CathedralIntroZoneAEditor : Editor
                 continue;
             }
 
+            // HolyWater root has no sprite; hitbox/X captured separately.
             if (child.name == "HolyWater")
                 continue;
 
@@ -346,7 +374,8 @@ public class CathedralIntroZoneAEditor : Editor
 
     static string InferRole(string bucket, string goName, string spriteName)
     {
-        if (goName.StartsWith("Ceiling_") || goName.StartsWith("Ceiling"))
+        if (goName.StartsWith("Ceiling_") || goName.StartsWith("Ceiling") ||
+            spriteName.Contains("cathedral_15") || spriteName.Contains("holywater_ceiling"))
             return "ceiling";
         if (goName.StartsWith("BG_") || spriteName.Contains("map_bg_"))
             return "bg";

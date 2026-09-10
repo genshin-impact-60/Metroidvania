@@ -72,7 +72,7 @@
 | Spawn | 坑底裂纹平台；开场播 **getup**，控制锁至结束 | ✅ |
 | 裂隙 | 通向「地下」的视觉裂口（一期不进墓穴）；身后**厚石封墙**（填块体积 + 立面墙板 + 铁栅 + blocker），接地面/顶棚 | ✅ |
 | **地面** | 统一完整石砖（`map_tileset_cathedral_1`）铺满可走面；廊底有垫层，坑下仍留裂隙虚空 | ✅ |
-| **房顶** | 连续顶棚（`floorTop+4.2`）；圣水 X 留顶缝 + 碎ledge | ✅ |
+| **房顶** | 连续檐口；生成后可在 Scene 手调，Ctrl+S 保存 | ✅ |
 | **圣水** | 见下表「圣水规格」；**气氛 + 单点伤害**（已拍板） | ✅ |
 | **存档 1（SV1）** | 起身可交互范围内；教第一次存档 / 读档 | ⏸ **后置**；现阶段死回出生点 |
 
@@ -82,15 +82,13 @@
 
 | 项 | 锁定 |
 |----|------|
-| 摆法 | 顶缝滴落 → 对准 **1 个**可贴地灼点；spawn 右约 2.8u（`x≈-0.55`），**不压 getup 脚下**；落地有 impact + ripple + 灼点脉冲 |
+| 摆法 | 顶棚代码铺无缝中段变体 `cathedral_15/b/c`（略重叠）；圣水 X 同排换同规格 `holywater_ceiling_block` 对准 `holywater_basin_pool` |
 | 伤害 | 踩中 **1** 点；满血 3；可绕开；**勿整坑持续掉血** |
 | 触发 | `Hazard` 层 Trigger；`DamageZone`；getup / 控制锁期间不伤 |
 | 反馈 | 短击退 + ~0.85s 无敌帧 + 闪烁；首次命中旁白一句 |
 | 旁白 | 「圣水灼肤——这里不欢迎他/她。」（一期 Console / 日后 UI，只播一次） |
-| 美术主用 | `Assets/Art/Environment/Hazards/map_hazard_holywater_floor_decal.png`（贴地灼痕 + 水滴帧 + 落地涟漪） |
-| 顶缝装饰 | 同目录 `map_hazard_holywater_cathedral_flat.png` 的 `holywater_ceiling_drip_*`；落地叠 `holywater_flat_ripple` |
-| 参考稿 | `map_hazard_holywater_cathedral.png`（石盆风，**不作** A 主灼点） |
-| 脚本 | `PlaceHolyWater`（`CathedralIntroZoneA`）、`HolyWaterDripFx`、`DamageZone`、`PlayerHealth` |
+| 美术 | 顶棚：`cathedral_15` / `15b` / `15c` 无缝中段；滴水：`holywater_ceiling_block`；地面水洼：`holywater_basin_pool` |
+| 脚本 | `PlaceHolyWater` / `DamageZone` / `PlayerHealth`（场景手摆；可选重置生成） |
 
 ### B · 圣水走廊（空手教学）
 
@@ -134,7 +132,7 @@
 - **主路径单层**；最多 1～2 个矮跳台（高度约 1 次跳跃）。
 - 不要塞样板图右侧盘旋楼梯。
 - 地面连续可走（砖缝碰撞略重叠，防掉缝）；裂隙坑用平台托住，防止开场掉虚空（或虚空触发回 Spawn）。
-- Zone A 有连续顶棚；圣水处留顶缝，顶缝高度约 `floorTop + 4.2`。
+- Zone A 有连续顶棚（代码铺）；圣水 X 同排为滴水块，高度约 `floorTop + 4.2`。
 - 碰撞层：地面 `Ground`；圣水灼点 / 刺 `Hazard`；存档/没收架 `Interact`；角色不与装饰 props 硬碰（翅膀/披风无碰撞）。
 
 ---
@@ -144,7 +142,7 @@
 | ID | 物件 | 区段 | 资源 / 占位 | 作用 | 状态 |
 |----|------|------|-------------|------|------|
 | S0 | Player Spawn | A | — | getup 起点 | ✅ |
-| HZ0 | 圣水灼点 + 滴落 | A | `map_hazard_holywater_floor_decal` + ceiling drip | 气氛；1 伤可绕 | ✅ |
+| HZ0 | 圣水灼点 + 顶棚滴水块 | A | `basin` + `cathedral_15` 顶棚 + `ceiling_block` 同行 | 气氛；1 伤可绕 | ✅ |
 | SV1 | 存档祭台 | A | `map_interact_save_cathedral` 熄/燃 | 教交互；死亡回最近激活档 | ⏸ 后置 |
 | HZ1 | 地刺短条 | B | `spike_floor_cathedral`（`map_hazards_cathedral`） | 教伤害/击退 | ❌ |
 | PL1 | 矮平台 ×1～2 | B | `map_tileset_cathedral` 块 | 教跳 | ❌ |
@@ -207,8 +205,8 @@
 - [x] 开场 getup 后只能走/跳
 - [x] 裂隙纵深 + 左厚石封墙可读（非背景贴条）
 - [x] 地面统一完整石砖、连续无掉缝；廊底有垫层（坑下仍见裂隙）
-- [x] 连续顶棚；圣水顶缝对准灼点
-- [x] 圣水顶缝滴落对准地面灼点
+- [x] 连续顶棚；圣水滴水块对准灼点
+- [x] 顶棚为 `cathedral_15` 变体；圣水 X 同排为 `holywater_ceiling_block`；地面 basin 灼点可踩
 - [x] 灼点可绕；踩中 1 伤 + 击退 + 无敌；首次旁白一句
 - [x] 掉虚空 / 死透回出生点（无 SV1 时）
 - [ ] SV1 可存可死可读回裂隙旁（后置）
@@ -227,10 +225,11 @@
 
 ## 9. 实现备注
 
-- 内部区域名：`Cathedral_Hub / Zone_Intro`；代码入口 `CathedralIntroZoneA`（ContextMenu：**Rebuild Zone A**）。
-- **摆关方式：** 首次 / Rebuild 用代码默认布局；之后可在 Hierarchy 里拖 Player、HolyWater、Decor 等，**进 Play 会保留位置**（只重绑动画与滴落 FX）。想回到代码默认布局时再 Rebuild。
-- 美术：A 圣水已用 floor_decal 主贴图；没收架仍可用铁栅/柱 props + `stained_oathblade_concept` 占位。
+- 内部区域名：`Cathedral_Hub / Zone_Intro`；组件 `CathedralIntroZoneA`。
+- **摆关方式（场景即真相）：** 在 Hierarchy / Scene 直接拖地板、顶棚、人物、圣水 → **Ctrl+S 保存场景**。日常不需要 Bake / Rebuild。
+- 空场景可点 **首次生成**；只有要推倒重来时才用 **重置生成**（会清空手改）。
+- **导出备份** 可选，写入 `ZoneA_Layout.json` 作保险 / 重置种子。
+- 美术：顶棚可用生成器铺 `cathedral_15` / `15b` / `15c` + `holywater_ceiling_block`，之后在场景里手调并保存。
 - 比例目标：chibi 站在侧厅地板上像「人在侧廊」，不要蚂蚁感；角色 sheet PPU **256**，角色高约 2；环境 hazard sheet PPU **100**。
-- 切片工具：`Tools/slice_holywater_sheets.py`（黑底转透明 + 写 `.meta`）。
 - 建议下一刀：**SV1**，或铺 **B 走廊**（走/跳/刺，复用 `DamageZone`）。
 - 做完本房验收后，再铺右侧中殿的裂隙门 / 净光障壁「先见后至」。

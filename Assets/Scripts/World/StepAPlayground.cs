@@ -146,7 +146,7 @@ public class StepAPlayground : MonoBehaviour
         if (controller == null)
             return;
 
-        // Defaults match Zone A; Bake Colliders → Layout writes ZoneA_Layout.json overrides.
+        // Defaults match Zone A; Bake Layout writes ZoneA_Layout.json overrides.
         var standingSize = new Vector2(0.5535295f, 1.705085f);
         var standingOffset = new Vector2(0.1400892f, 0.629543f);
         const float getupH = 0.42f;
